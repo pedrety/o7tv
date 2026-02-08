@@ -1,0 +1,13 @@
+[flake8]
+exclude =
+    .git,
+    .eggs,
+    *.egg-info
+    .vscode,
+    __pycache__,
+    build,
+    dist
+    
+max-line-length = 100
+docstring-convention = google
+ignore = D100, D101, D104, D106, W503

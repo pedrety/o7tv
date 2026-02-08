@@ -216,7 +216,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 
-static/*
+static/*.webm
 
 .vscode/
 
