@@ -1,4 +1,8 @@
+import logging
+
 import ffmpeg
+
+logger = logging.getLogger(__name__)
 
 
 def get_duration(path: str) -> float | None:
@@ -29,6 +33,9 @@ def convert_to_webm(input_file: str, output_file: str) -> None:
     Args:
         input_file (str): Path to the input media file.
         output_file (str): Path to save the converted WebM file.
+
+    Raises:
+        RuntimeError: If ffmpeg conversion fails.
     """
     duration = get_duration(input_file)
     speed_factor = duration / 3.0 if duration and duration > 3.0 else None
@@ -53,4 +60,33 @@ def convert_to_webm(input_file: str, output_file: str) -> None:
     if speed_factor or duration is None or duration > 3.0:
         out_kwargs["t"] = 3
 
-    ffmpeg.output(stream, output_file, **out_kwargs).overwrite_output().run(quiet=True)
+    try:
+        ffmpeg.output(stream, output_file, **out_kwargs).overwrite_output().run(
+            quiet=False, capture_stderr=True
+        )
+    except ffmpeg.Error as e:
+        logger.error(
+            f"FFmpeg conversion failed for {input_file}: "
+            f"{e.stderr.decode() if e.stderr else 'unknown error'}"
+        )
+        stderr_msg = e.stderr.decode() if e.stderr else "error desconocido"
+        if (
+            "Invalid data found when processing input" in stderr_msg
+            or "image data not found" in stderr_msg
+        ):
+            raise RuntimeError(
+                "El archivo descargado parece estar corrupto o no es un formato de video/GIF "
+                "válido. Intenta con otra URL del emote."
+            ) from e
+        elif "Could not find codec parameters" in stderr_msg:
+            raise RuntimeError(
+                "No se pudo reconocer el formato del archivo. Asegúrate de que es un GIF o video "
+                "válido."
+            ) from e
+        else:
+            raise RuntimeError(
+                f"No se pudo convertir el emote: {stderr_msg[:200]}"
+            ) from e
+    except Exception as e:
+        logger.error(f"Unexpected error during conversion of {input_file}: {e}")
+        raise RuntimeError("Error inesperado durante la conversión.") from e

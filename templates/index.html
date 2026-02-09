@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>7TV Emote → WebM</title>
+    <style>
+        :root {
+            --bg: #0b0e11;
+            --card: #0f1620;
+            --card-2: #121b27;
+            --accent: #6cf;
+            --accent-2: #8ef;
+            --text: #e7edf5;
+            --muted: #9bb0c3;
+            --error: #ff6b6b;
+            --shadow: 0 16px 60px rgba(0, 0, 0, 0.4);
+            --radius: 16px;
+            --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            margin: 0;
+            padding: 32px;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at 20% 20%, rgba(108, 255, 255, 0.08), transparent 25%),
+                radial-gradient(circle at 80% 10%, rgba(142, 238, 255, 0.06), transparent 22%),
+                linear-gradient(145deg, #0b0e11 0%, #0e141d 50%, #0b0f17 100%);
+            background-attachment: fixed;
+            color: var(--text);
+            font-family: var(--font);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .panel {
+            width: min(640px, 100%);
+            background: linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .panel-split {
+            width: min(1200px, 96%);
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .panel-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: sticky;
+            top: 24px;
+            align-self: start;
+        }
+
+        .panel-content {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-width: 0;
+            max-height: calc(100vh - 64px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .panel-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .panel-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 16px rgba(108, 255, 255, 0.6);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 0.3px;
+        }
+
+        .sub {
+            color: var(--muted);
+            margin-top: 4px;
+            font-size: 13px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: calc(var(--radius) - 4px);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        input[type=text] {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        input[type=text]:focus {
+            border-color: rgba(108, 255, 255, 0.6);
+            box-shadow: 0 0 0 3px rgba(108, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        button {
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: #001019;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 24px rgba(108, 255, 255, 0.25);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-loading {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            opacity: 0.85;
+            cursor: wait;
+        }
+
+        .btn-loading .btn-spinner {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 16, 25, 0.2);
+            border-left-color: #001019;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .error {
+            color: var(--error);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .result-card {
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: calc(var(--radius) - 4px);
+            background: rgba(255, 255, 255, 0.02);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+
+        .grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .grid-top {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .result-item {
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-item img {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+        }
+
+        .loading-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 0 6px 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.12);
+            border-left-color: var(--accent);
+            animation: spin 0.8s linear infinite;
+        }
+
+        .loading-container.is-done .spinner,
+        .loading-container.is-error .spinner {
+            display: none;
+        }
+
+        .spinner-text {
+            font-size: 14px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-item .name {
+            font-size: 12px;
+            color: var(--muted);
+            word-break: break-word;
+        }
+
+        .result-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            color: var(--muted);
+        }
+
+        .section-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-button {
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-button.active {
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: #001019;
+            border-color: transparent;
+        }
+
+        .section-hidden {
+            display: none;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 12px;
+            background: #000;
+            margin-top: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .download {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .download:hover {
+            color: var(--accent-2);
+        }
+
+        .tip {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: -2px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="panel panel-split">
+        <div class="panel-sidebar">
+            <div class="header">
+                <div>
+                    <h1>7TV Emote → WebM</h1>
+                    <div class="sub">Pega la URL directa del emote (gif) o busca por nombre.</div>
+                </div>
+            </div>
+
+            <div>
+                {% if error %}
+                <p class="error">{{ error }}</p>
+                {% endif %}
+                <form method="get" action="/search">
+                    <label for="search_query">Buscar emote</label>
+                    <input id="search_query" type="text" name="q" placeholder="weirdChamp"
+                        value="{{ search_query or '' }}">
+                    <div class="tip">Busca en 7TV por nombre y selecciona un resultado.</div>
+                    <button type="submit">Buscar</button>
+                </form>
+                <form method="post" action="/convert">
+                    <label for="emote_url">URL del emote</label>
+                    <input id="emote_url" type="text" name="emote_url"
+                        placeholder="https://cdn.7tv.app/emote/.../4x.gif" required>
+                    <div class="tip">Acepta GIF de 7TV CDN. Se escala a 512px máx y se limita a 3s.</div>
+                    <button type="submit">Convertir</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel-content">
+            {% if search_results %}
+            <div class="result-card">
+                <div class="section-toggle">
+                    <button type="button" class="toggle-button active" data-target="videos-section">Videos</button>
+                    <button type="button" class="toggle-button" data-target="images-section">Imágenes</button>
+                </div>
+                <div id="videos-section">
+                    <div class="grid" id="search-grid">
+                        {% for emote in search_results if emote.is_animated %}
+                        <div class="result-item">
+                            <div class="name">{{ emote.name }}</div>
+                            {% if emote.image %}
+                            <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
+                            <form method="post" action="/convert">
+                                <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
+                                <button type="submit">Convertir</button>
+                            </form>
+                            {% else %}
+                            <div class="tip">Sin imagen disponible</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="loading-container" id="scroll-status" data-page="{{ search_page or 1 }}"
+                        data-query="{{ search_query or '' }}">
+                        <div class="spinner" aria-hidden="true"></div>
+                        <div class="spinner-text">Cargando más...</div>
+                    </div>
+                </div>
+                <div class="section-hidden" id="images-section">
+                    <div class="grid" id="static-grid">
+                        {% for emote in search_results if not emote.is_animated %}
+                        <div class="result-item">
+                            <div class="name">{{ emote.name }}</div>
+                            {% if emote.static_image %}
+                            <img src="{{ emote.static_image.url }}" alt="{{ emote.name }}" />
+                            <a class="download" href="{{ emote.static_image.url }}" download>Descargar PNG</a>
+                            {% elif emote.image %}
+                            <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
+                            <a class="download" href="{{ emote.image.url }}" download>Descargar</a>
+                            {% else %}
+                            <div class="tip">Sin imagen disponible</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if not search_results and trending_results %}
+            <div class="result-card">
+                <h3>Top de hoy</h3>
+                <div class="grid grid-top">
+                    {% for emote in trending_results %}
+                    <div class="result-item">
+                        <div class="name">{{ emote.name }}</div>
+                        {% if emote.image %}
+                        <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
+                        <form method="post" action="/convert">
+                            <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
+                            <button type="submit">Convertir</button>
+                        </form>
+                        {% else %}
+                        <div class="tip">Sin imagen disponible</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if emote_url %}
+            <div class="result-card">
+                <video controls autoplay loop muted>
+                    <source src="{{ emote_url }}" type="video/webm">
+                </video>
+                {% if emote_file %}
+                <a class="download" href="/download/{{ emote_file }}">Download WebM</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        (function () {
+            const status = document.getElementById("scroll-status");
+            const animatedGrid = document.getElementById("search-grid");
+            const staticGrid = document.getElementById("static-grid");
+            if (!status || !animatedGrid || !staticGrid) {
+                return;
+            }
+
+            let page = parseInt(status.dataset.page || "1", 10);
+            const query = status.dataset.query || "";
+            let loading = false;
+            let done = false;
+
+            async function loadMore() {
+                if (loading || done) {
+                    return;
+                }
+                loading = true;
+                status.classList.remove("is-done", "is-error");
+                status.querySelector(".spinner-text").textContent = "Cargando más...";
+                const nextPage = page + 1;
+                try {
+                    const response = await fetch(
+                        `/search/page?q=${encodeURIComponent(query)}&page=${nextPage}`
+                    );
+                    if (!response.ok) {
+                        throw new Error("search failed");
+                    }
+                    const data = await response.json();
+                    const animatedItems = data.animated_items || [];
+                    const staticItems = data.static_items || [];
+                    if (animatedItems.length === 0 && staticItems.length === 0) {
+                        done = true;
+                        status.classList.add("is-done");
+                        status.querySelector(".spinner-text").textContent = "No hay más resultados";
+                        return;
+                    }
+                    animatedItems.forEach((item) => {
+                        const wrapper = document.createElement("div");
+                        wrapper.className = "result-item";
+
+                        const name = document.createElement("div");
+                        name.className = "name";
+                        name.textContent = item.name;
+                        wrapper.appendChild(name);
+
+                        if (item.image_url) {
+                            const img = document.createElement("img");
+                            img.src = item.image_url;
+                            img.alt = item.name;
+                            wrapper.appendChild(img);
+
+                            const form = document.createElement("form");
+                            form.method = "post";
+                            form.action = "/convert";
+                            const hidden = document.createElement("input");
+                            hidden.type = "hidden";
+                            hidden.name = "emote_url";
+                            hidden.value = item.image_url;
+                            form.appendChild(hidden);
+                            const button = document.createElement("button");
+                            button.type = "submit";
+                            button.textContent = "Convertir";
+                            form.appendChild(button);
+                            wrapper.appendChild(form);
+                        } else {
+                            const tip = document.createElement("div");
+                            tip.className = "tip";
+                            tip.textContent = "Sin imagen disponible";
+                            wrapper.appendChild(tip);
+                        }
+
+                        animatedGrid.appendChild(wrapper);
+                    });
+                    staticItems.forEach((item) => {
+                        const wrapper = document.createElement("div");
+                        wrapper.className = "result-item";
+
+                        const name = document.createElement("div");
+                        name.className = "name";
+                        name.textContent = item.name;
+                        wrapper.appendChild(name);
+
+                        const previewUrl = item.png_url || item.image_url;
+                        if (previewUrl) {
+                            const img = document.createElement("img");
+                            img.src = previewUrl;
+                            img.alt = item.name;
+                            wrapper.appendChild(img);
+
+                            const link = document.createElement("a");
+                            link.className = "download";
+                            link.href = item.png_url || previewUrl;
+                            link.setAttribute("download", "");
+                            link.textContent = item.png_url ? "Descargar PNG" : "Descargar";
+                            wrapper.appendChild(link);
+                        } else {
+                            const tip = document.createElement("div");
+                            tip.className = "tip";
+                            tip.textContent = "Sin imagen disponible";
+                            wrapper.appendChild(tip);
+                        }
+
+                        staticGrid.appendChild(wrapper);
+                    });
+                    page = nextPage;
+                    status.dataset.page = String(page);
+                } catch (err) {
+                    status.classList.add("is-error");
+                    status.querySelector(".spinner-text").textContent = "Error al cargar";
+                } finally {
+                    loading = false;
+                }
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) {
+                    loadMore();
+                }
+            });
+            observer.observe(status);
+        })();
+
+        (function () {
+            const toggleButtons = document.querySelectorAll(".toggle-button");
+            const videosSection = document.getElementById("videos-section");
+            const imagesSection = document.getElementById("images-section");
+            if (!toggleButtons.length || !videosSection || !imagesSection) {
+                return;
+            }
+
+            toggleButtons.forEach((button) => {
+                button.addEventListener("click", () => {
+                    toggleButtons.forEach((btn) => btn.classList.remove("active"));
+                    button.classList.add("active");
+                    if (button.dataset.target === "images-section") {
+                        videosSection.classList.add("section-hidden");
+                        imagesSection.classList.remove("section-hidden");
+                    } else {
+                        imagesSection.classList.add("section-hidden");
+                        videosSection.classList.remove("section-hidden");
+                    }
+                });
+            });
+        })();
+
+        (function () {
+            const forms = document.querySelectorAll("form[action='/convert']");
+            if (!forms.length) {
+                return;
+            }
+
+            forms.forEach((form) => {
+                form.addEventListener("submit", () => {
+                    const button = form.querySelector("button");
+                    if (!button) {
+                        return;
+                    }
+                    button.disabled = true;
+                    button.classList.add("btn-loading");
+                    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Convirtiendo...</span>';
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>
