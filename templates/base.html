@@ -191,6 +191,12 @@
             color: var(--accent-2);
         }
 
+        .made-with .ai-note {
+            font-size: 10px;
+            color: var(--muted);
+            opacity: 0.8;
+        }
+
         .panel::-webkit-scrollbar {
             display: none;
         }
@@ -558,8 +564,9 @@
     </main>
     <footer class="page-footer">
         <div>7TV Emote → WebM • {{ year or 2026 }}</div>
-        <div>
-            Built with <a href="https://fastapi.tiangolo.com/" target="_blank" rel="noopener">FastAPI</a>
+        <div class="made-with">
+            Made with <span aria-hidden="true">❤️</span><span class="sr-only"> love</span> by <strong>Perreti</strong>
+            <span class="ai-note">(and gpt-5.2-codex)</span>
         </div>
     </footer>
     {% block scripts %}{% endblock %}
