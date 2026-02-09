@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import requests
 from fastapi import APIRouter, Form, HTTPException, Request
@@ -16,26 +17,56 @@ router = APIRouter()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
+def _ensure_allowed_image_url(image_url: str) -> str:
+    """Validate image URL for download proxy.
+
+    Args:
+        image_url (str): The image URL to validate.
+
+    Returns:
+        str: The validated URL.
+
+    Raises:
+        HTTPException: If the URL is invalid or not allowed.
+    """
+    parsed = urlparse(image_url)
+    if parsed.scheme not in {"http", "https"}:
+        raise HTTPException(status_code=400, detail="URL inválida")
+
+    hostname = (parsed.hostname or "").lower()
+    if not (hostname.endswith("7tv.app") or hostname.endswith("7tvcdn.net")):
+        raise HTTPException(status_code=400, detail="Host no permitido")
+
+    return image_url
+
+
 @router.get("/")
-async def index(request: Request) -> Response:
+async def index(request: Request, sort: str = "TOP_ALL_TIME") -> Response:
     """Render the main page with the form to submit an emote URL.
 
     Args:
         request (Request): The incoming HTTP request.
+        sort (str): Sort type for emotes (TOP_ALL_TIME, TRENDING_DAILY, NEW).
 
     Returns:
         TemplateResponse: The rendered HTML page with the form.
     """
     error_message = None
+    trending = []
+
+    # Validate sort parameter
+    valid_sorts = ["TOP_ALL_TIME", "TRENDING_DAILY", "UPLOAD_DATE"]
+    if sort not in valid_sorts:
+        sort = "TOP_ALL_TIME"
+
     try:
         trending = search_emotes(
             None,
             per_page=9,
-            sort_by="TRENDING_DAILY",
+            sort_by=sort,
         ).items
     except (ValueError, requests.RequestException):
-        trending = []
-        error_message = "No se pudo cargar el top de hoy"
+        error_message = "No se pudo cargar los emotes"
 
     return templates.TemplateResponse(
         "home.html",
@@ -214,3 +245,27 @@ async def download_file(filename: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
 
     return FileResponse(path, media_type="video/webm", filename="emote.webm")
+
+
+@router.get("/download-image")
+async def download_image(url: str) -> Response:
+    """Proxy-download an external image so the browser forces download.
+
+    Args:
+        url (str): The image URL to download.
+
+    Returns:
+        Response: The response containing the image content.
+    """
+    image_url = _ensure_allowed_image_url(url)
+    try:
+        response = requests.get(image_url, timeout=15)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=502, detail="Error descargando imagen") from exc
+
+    content_type = response.headers.get("Content-Type", "application/octet-stream")
+    filename = Path(urlparse(image_url).path).name or "emote"
+    filename = unquote(filename)
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return Response(content=response.content, media_type=content_type, headers=headers)

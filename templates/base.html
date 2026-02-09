@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>{{ page_title or "7TV Emote → WebM" }}</title>
     <style>
         :root {
-            --bg: #0b0e11;
-            --card: #0f1620;
-            --card-2: #121b27;
-            --accent: #6cf;
-            --accent-2: #8ef;
-            --text: #e7edf5;
-            --muted: #9bb0c3;
+            --bg: #0b0c0e;
+            --card: #141517;
+            --card-2: #1a1c1f;
+            --accent: #7dd3fc;
+            --accent-2: #a5e6ff;
+            --text: #eef1f4;
+            --muted: #a2a9b0;
             --error: #ff6b6b;
-            --shadow: 0 16px 60px rgba(0, 0, 0, 0.4);
+            --shadow: 0 16px 60px rgba(0, 0, 0, 0.45);
             --radius: 16px;
             --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
         }
+
 
         * {
             box-sizing: border-box;
@@ -33,9 +35,9 @@
             padding: 32px;
             height: 100vh;
             overflow: hidden;
-            background: radial-gradient(circle at 20% 20%, rgba(108, 255, 255, 0.08), transparent 25%),
-                radial-gradient(circle at 80% 10%, rgba(142, 238, 255, 0.06), transparent 22%),
-                linear-gradient(145deg, #0b0e11 0%, #0e141d 50%, #0b0f17 100%);
+            background: radial-gradient(circle at 20% 20%, rgba(125, 211, 252, 0.08), transparent 25%),
+                radial-gradient(circle at 80% 10%, rgba(165, 230, 255, 0.06), transparent 22%),
+                linear-gradient(145deg, var(--bg) 0%, #0f1114 50%, #0a0b0c 100%);
             background-attachment: fixed;
             color: var(--text);
             font-family: var(--font);
@@ -44,8 +46,10 @@
             gap: 24px;
         }
 
+
         .panel {
-            width: min(640px, 100%);
+            width: min(1200px, 96%);
+            margin: 0 auto;
             background: linear-gradient(160deg, var(--card) 0%, var(--card-2) 100%);
             border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: var(--shadow);
@@ -54,16 +58,12 @@
             display: flex;
             flex-direction: column;
             gap: 18px;
-        }
-
-        .panel-split {
-            width: 100%;
-            display: grid;
-            grid-template-columns: 360px 1fr;
-            gap: 28px;
-            align-items: start;
             flex: 1;
             min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
         }
 
         .page-header,
@@ -78,11 +78,12 @@
         }
 
         .page-header {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr minmax(0, 500px) 1fr;
             align-items: center;
-            justify-content: space-between;
             gap: 20px;
             flex-shrink: 0;
+            padding: 16px 28px;
         }
 
         .page-header .logo {
@@ -92,6 +93,7 @@
             text-decoration: none;
             color: var(--text);
             transition: transform 0.15s;
+            justify-self: start;
         }
 
         .page-header .logo:hover {
@@ -100,16 +102,50 @@
 
         .page-header .logo h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
+        }
+
+        .page-header .header-center {
+            width: 100%;
+            max-width: 500px;
+            justify-self: center;
+        }
+
+        .page-header .header-center form {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .page-header .search-bar {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        .page-header .search-bar:focus {
+            border-color: rgba(108, 255, 255, 0.6);
+            box-shadow: 0 0 0 3px rgba(108, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .page-header nav {
             display: flex;
             gap: 12px;
+            align-items: center;
+            justify-self: end;
         }
 
-        .page-header nav a {
+        .page-header nav a,
+        .page-header nav button {
             padding: 10px 20px;
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.04);
@@ -119,9 +155,12 @@
             font-weight: 600;
             font-size: 14px;
             transition: all 0.15s;
+            cursor: pointer;
         }
 
-        .page-header nav a:hover {
+
+        .page-header nav a:hover,
+        .page-header nav button:hover {
             background: rgba(108, 255, 255, 0.1);
             border-color: rgba(108, 255, 255, 0.3);
             color: var(--accent);
@@ -152,36 +191,8 @@
             color: var(--accent-2);
         }
 
-        .panel-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            position: sticky;
-            top: 24px;
-            align-self: start;
-        }
-
-        .panel-content {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            min-width: 0;
-            min-height: 0;
-            max-height: 100%;
-            overflow-y: auto;
-            overflow-x: hidden;
-            overscroll-behavior: contain;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .panel-content::-webkit-scrollbar {
+        .panel::-webkit-scrollbar {
             display: none;
-        }
-
-        @media (max-width: 900px) {
-            .panel-split {
-                grid-template-columns: 1fr;
-            }
         }
 
         .header {
@@ -208,23 +219,35 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            margin-top: 8px;
+            margin-bottom: 16px;
         }
 
-        .nav a {
-            padding: 6px 12px;
+        .nav a,
+        .nav button {
+            padding: 8px 14px;
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.04);
-            color: var(--accent);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--muted);
             text-decoration: none;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 13px;
             transition: all 0.15s;
+            cursor: pointer;
         }
 
-        .nav a:hover {
+        .nav a:hover,
+        .nav button:hover {
             background: rgba(108, 255, 255, 0.1);
-            color: var(--accent-2);
+            border-color: rgba(108, 255, 255, 0.3);
+            color: var(--accent);
+        }
+
+        .nav a.active,
+        .nav button.active {
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: #001019;
+            border-color: transparent;
         }
 
         form {
@@ -235,6 +258,30 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: calc(var(--radius) - 4px);
             background: rgba(255, 255, 255, 0.02);
+        }
+
+        .inline-form {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            display: inline-flex;
+            width: auto;
+            align-items: center;
+        }
+
+        .inline-form button {
+            padding: 10px 14px;
+            font-size: 13px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(108, 255, 255, 0.2);
+        }
+
+        .inline-form.download-webm {
+            margin-top: 32px;
+            display: flex;
+            justify-content: center;
+            width: 100%;
         }
 
         label {
@@ -333,6 +380,25 @@
             flex-direction: column;
             align-items: center;
             gap: 8px;
+        }
+
+        .result-item form {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+            width: auto;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .result-item button,
+        .result-item .download-button {
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(108, 255, 255, 0.2);
         }
 
         .result-item img {
@@ -441,6 +507,28 @@
             color: var(--accent-2);
         }
 
+        .download-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+            color: #001019;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 24px rgba(108, 255, 255, 0.25);
+            margin-top: 12px;
+        }
+
+        .download-button:active {
+            transform: translateY(1px);
+        }
+
         .tip {
             color: var(--muted);
             font-size: 12px;
@@ -448,26 +536,26 @@
         }
     </style>
 </head>
+
 <body>
     <header class="page-header">
         <a href="/" class="logo">
-            <h1>7TV Emote → WebM</h1>
+            <h1>7TV → WebM</h1>
         </a>
-        <nav>
-            <a href="/search">Buscar</a>
-        </nav>
+        <div class="header-center">
+            <form method="get" action="/search">
+                <input type="text" name="q" class="search-bar" placeholder="Buscar emotes..."
+                    value="{{ search_query or '' }}">
+            </form>
+        </div>
     </header>
-    <div class="panel panel-split">
-        <div class="panel-sidebar">
-            {% if error %}
-                <p class="error">{{ error }}</p>
-            {% endif %}
-            {% block sidebar %}{% endblock %}
-        </div>
-        <div class="panel-content">
-            {% block content %}{% endblock %}
-        </div>
-    </div>
+    <main class="panel">
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
+        {% block sidebar %}{% endblock %}
+        {% block content %}{% endblock %}
+    </main>
     <footer class="page-footer">
         <div>7TV Emote → WebM • {{ year or 2026 }}</div>
         <div>
@@ -476,4 +564,5 @@
     </footer>
     {% block scripts %}{% endblock %}
 </body>
+
 </html>
