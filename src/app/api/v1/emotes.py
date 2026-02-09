@@ -4,14 +4,16 @@ from pathlib import Path
 import requests
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.templating import Jinja2Templates
 
-from app.core.config import STATIC_DIR, TEMPLATES
+from app.core.config import settings
 from app.services.conversion import convert_to_webm
 from app.services.seventv import search_emotes
 from app.utils.files import extract_emote_id
 from app.utils.http import download_to_path
 
 router = APIRouter()
+templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
 @router.get("/")
@@ -28,15 +30,15 @@ async def index(request: Request) -> Response:
     try:
         trending = search_emotes(
             None,
-            per_page=6,
+            per_page=9,
             sort_by="TRENDING_DAILY",
         ).items
     except (ValueError, requests.RequestException):
         trending = []
         error_message = "No se pudo cargar el top de hoy"
 
-    return TEMPLATES.TemplateResponse(
-        "index.html",
+    return templates.TemplateResponse(
+        "home.html",
         {
             "request": request,
             "emote_url": None,
@@ -60,41 +62,43 @@ async def convert(request: Request, emote_url: str = Form(...)) -> Response:
         TemplateResponse: The rendered HTML page with the conversion result or error message.
     """
     emote_id = extract_emote_id(emote_url)
-    tmp_output = STATIC_DIR / f"{emote_id}.webm"
+    tmp_output = settings.static_dir / f"{emote_id}.webm"
 
     if not tmp_output.exists():
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_input = Path(tmpdir) / f"emote_input-{emote_id}"
             downloaded = download_to_path(emote_url, tmp_input)
             if not downloaded:
-                return TEMPLATES.TemplateResponse(
-                    "index.html",
+                return templates.TemplateResponse(
+                    "convert.html",
                     {
                         "request": request,
                         "error": "No se pudo descargar el emote desde la URL proporcionada",
                         "emote_url": None,
                         "search_results": None,
                         "search_query": None,
+                        "trending_results": [],
                     },
                 )
 
             try:
                 convert_to_webm(str(tmp_input), str(tmp_output))
             except RuntimeError as e:
-                return TEMPLATES.TemplateResponse(
-                    "index.html",
+                return templates.TemplateResponse(
+                    "convert.html",
                     {
                         "request": request,
                         "error": str(e),
                         "emote_url": None,
                         "search_results": None,
                         "search_query": None,
+                        "trending_results": [],
                     },
                 )
 
     ver = int(tmp_output.stat().st_mtime)
-    return TEMPLATES.TemplateResponse(
-        "index.html",
+    return templates.TemplateResponse(
+        "convert.html",
         {
             "request": request,
             "emote_url": f"/static/{tmp_output.name}?v={ver}",
@@ -102,6 +106,7 @@ async def convert(request: Request, emote_url: str = Form(...)) -> Response:
             "emote_name": emote_url,
             "search_results": None,
             "search_query": None,
+            "trending_results": [],
         },
     )
 
@@ -123,8 +128,8 @@ async def search(request: Request, q: str | None = None) -> Response:
     try:
         results = search_emotes(q)
     except (ValueError, requests.RequestException):
-        return TEMPLATES.TemplateResponse(
-            "index.html",
+        return templates.TemplateResponse(
+            "results.html",
             {
                 "request": request,
                 "emote_url": None,
@@ -136,8 +141,8 @@ async def search(request: Request, q: str | None = None) -> Response:
             },
         )
 
-    return TEMPLATES.TemplateResponse(
-        "index.html",
+    return templates.TemplateResponse(
+        "results.html",
         {
             "request": request,
             "emote_url": None,
@@ -203,7 +208,7 @@ async def download_file(filename: str) -> FileResponse:
     Returns:
         FileResponse: The response containing the file for download.
     """
-    path = Path(STATIC_DIR) / filename
+    path = settings.static_dir / filename
 
     if not path.exists():
         raise HTTPException(status_code=404, detail="Archivo no encontrado")

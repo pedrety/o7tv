@@ -2,14 +2,19 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.emotes import router as emotes_router
-from app.core.config import STATIC_DIR, STATIC_URL
+from app.core.config import settings
 
 
 def get_app() -> FastAPI:
     """Creates and configures the FastAPI application."""
     app = FastAPI()
 
-    app.mount(STATIC_URL, StaticFiles(directory=str(STATIC_DIR)), name="static")
+    settings.static_dir.mkdir(exist_ok=True)
+    app.mount(
+        settings.static_url,
+        StaticFiles(directory=str(settings.static_dir)),
+        name="static",
+    )
     app.include_router(emotes_router)
 
     return app

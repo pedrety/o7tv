@@ -1,6 +1,6 @@
 import requests
 
-from app.core.config import SEVENTV_GQL_URL
+from app.core.config import settings
 
 from ..models.emotes import EmoteImage, EmoteResult, EmoteSearchResponse
 
@@ -107,7 +107,7 @@ def search_emotes(
     """
 
     response = requests.post(
-        SEVENTV_GQL_URL,
+        settings.seventv_gql_url,
         json={
             "query": gql_query,
             "variables": {
