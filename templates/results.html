@@ -2,11 +2,11 @@
 
 {% block content %}
 {% if search_results %}
+<div class="section-toggle">
+    <button type="button" class="toggle-button active" data-target="videos-section">Videos</button>
+    <button type="button" class="toggle-button" data-target="images-section">Imágenes</button>
+</div>
 <div class="result-card">
-    <div class="section-toggle">
-        <button type="button" class="toggle-button active" data-target="videos-section">Videos</button>
-        <button type="button" class="toggle-button" data-target="images-section">Imágenes</button>
-    </div>
     <div id="videos-section">
         <h3>Videos</h3>
         <div class="grid" id="search-grid">

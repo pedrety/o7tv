@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.emotes import router as emotes_router
-from app.core.config import settings
+from app.config.config import settings
 
 
 def get_app() -> FastAPI:

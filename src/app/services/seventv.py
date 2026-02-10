@@ -1,6 +1,6 @@
 import requests
 
-from app.core.config import settings
+from app.config.config import settings
 
 from ..models.emotes import EmoteImage, EmoteResult, EmoteSearchResponse
 

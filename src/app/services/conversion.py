@@ -56,7 +56,6 @@ def convert_to_webm(input_file: str, output_file: str) -> None:
         **{"auto-alt-ref": 0},
     }
 
-    # Enforce máximo 3s si no hay duración conocida o para redondeo del speedup.
     if speed_factor or duration is None or duration > 3.0:
         out_kwargs["t"] = 3
 

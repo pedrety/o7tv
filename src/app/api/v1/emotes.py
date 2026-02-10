@@ -7,7 +7,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from app.core.config import settings
+from app.config.config import settings
 from app.services.conversion import convert_to_webm
 from app.services.seventv import search_emotes
 from app.utils.files import extract_emote_id
