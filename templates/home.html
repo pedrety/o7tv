@@ -7,7 +7,7 @@
     <a href="/?sort=TRENDING_DAILY"
         class="{% if request.query_params.get('sort') == 'TRENDING_DAILY' %}active{% endif %}">Trending</a>
     <a href="/?sort=UPLOAD_DATE"
-        class="{% if request.query_params.get('sort') == 'UPLOAD_DATE' %}active{% endif %}">Nuevo</a>
+        class="{% if request.query_params.get('sort') == 'UPLOAD_DATE' %}active{% endif %}">New</a>
 </div>
 {% endblock %}
 
@@ -16,11 +16,11 @@
 <div class="result-card">
     <h3>
         {% if request.query_params.get('sort') == 'TOP_ALL_TIME' %}
-        Top de siempre
+        All-time top
         {% elif request.query_params.get('sort') == 'UPLOAD_DATE' %}
-        Nuevos emotes
+        New emotes
         {% else %}
-        Trending hoy
+        Trending today
         {% endif %}
     </h3>
     <div class="grid grid-top">
@@ -31,10 +31,10 @@
             <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
             <form method="post" action="/convert">
                 <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
-                <button type="submit">Convertir</button>
+                <button type="submit">Convert</button>
             </form>
             {% else %}
-            <div class="tip">Sin imagen disponible</div>
+            <div class="tip">No image available</div>
             {% endif %}
         </div>
         {% endfor %}
@@ -59,7 +59,7 @@
                 }
                 button.disabled = true;
                 button.classList.add("btn-loading");
-                button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Convirtiendo...</span>';
+                button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Converting...</span>';
             });
         });
     })();

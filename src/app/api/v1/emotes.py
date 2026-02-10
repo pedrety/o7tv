@@ -31,11 +31,11 @@ def _ensure_allowed_image_url(image_url: str) -> str:
     """
     parsed = urlparse(image_url)
     if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="URL inválida")
+        raise HTTPException(status_code=400, detail="Invalid URL")
 
     hostname = (parsed.hostname or "").lower()
     if not (hostname.endswith("7tv.app") or hostname.endswith("7tvcdn.net")):
-        raise HTTPException(status_code=400, detail="Host no permitido")
+        raise HTTPException(status_code=400, detail="Host not allowed")
 
     return image_url
 
@@ -66,7 +66,7 @@ async def index(request: Request, sort: str = "TOP_ALL_TIME") -> Response:
             sort_by=sort,
         ).items
     except (ValueError, requests.RequestException):
-        error_message = "No se pudo cargar los emotes"
+        error_message = "Unable to load emotes"
 
     return templates.TemplateResponse(
         "home.html",
@@ -104,7 +104,7 @@ async def convert(request: Request, emote_url: str = Form(...)) -> Response:
                     "convert.html",
                     {
                         "request": request,
-                        "error": "No se pudo descargar el emote desde la URL proporcionada",
+                        "error": "Unable to download the emote from the provided URL",
                         "emote_url": None,
                         "search_results": None,
                         "search_query": None,
@@ -168,7 +168,7 @@ async def search(request: Request, q: str | None = None) -> Response:
                 "search_query": q,
                 "search_page": 1,
                 "trending_results": [],
-                "error": "No se pudo obtener resultados de búsqueda",
+                "error": "Unable to fetch search results",
             },
         )
 
@@ -199,7 +199,7 @@ async def search_page(q: str, page: int = 1) -> JSONResponse:
     try:
         results = search_emotes(q, page=page)
     except (ValueError, requests.RequestException) as exc:
-        raise HTTPException(status_code=502, detail="Error consultando 7TV") from exc
+        raise HTTPException(status_code=502, detail="Error querying 7TV") from exc
 
     return JSONResponse(
         {
@@ -242,7 +242,7 @@ async def download_file(filename: str) -> FileResponse:
     path = settings.static_dir / filename
 
     if not path.exists():
-        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+        raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(path, media_type="video/webm", filename="emote.webm")
 
@@ -262,7 +262,7 @@ async def download_image(url: str) -> Response:
         response = requests.get(image_url, timeout=15)
         response.raise_for_status()
     except requests.RequestException as exc:
-        raise HTTPException(status_code=502, detail="Error descargando imagen") from exc
+        raise HTTPException(status_code=502, detail="Error downloading image") from exc
 
     content_type = response.headers.get("Content-Type", "application/octet-stream")
     filename = Path(urlparse(image_url).path).name or "emote"

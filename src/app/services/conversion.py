@@ -68,24 +68,23 @@ def convert_to_webm(input_file: str, output_file: str) -> None:
             f"FFmpeg conversion failed for {input_file}: "
             f"{e.stderr.decode() if e.stderr else 'unknown error'}"
         )
-        stderr_msg = e.stderr.decode() if e.stderr else "error desconocido"
+        stderr_msg = e.stderr.decode() if e.stderr else "unknown error"
         if (
             "Invalid data found when processing input" in stderr_msg
             or "image data not found" in stderr_msg
         ):
             raise RuntimeError(
-                "El archivo descargado parece estar corrupto o no es un formato de video/GIF "
-                "válido. Intenta con otra URL del emote."
+                "The downloaded file appears to be corrupted or is not a valid video/GIF format. "
+                "Try another emote URL."
             ) from e
         elif "Could not find codec parameters" in stderr_msg:
             raise RuntimeError(
-                "No se pudo reconocer el formato del archivo. Asegúrate de que es un GIF o video "
-                "válido."
+                "Unable to recognize the file format. Make sure it is a valid GIF or video."
             ) from e
         else:
             raise RuntimeError(
-                f"No se pudo convertir el emote: {stderr_msg[:200]}"
+                f"Unable to convert the emote: {stderr_msg[:200]}"
             ) from e
     except Exception as e:
         logger.error(f"Unexpected error during conversion of {input_file}: {e}")
-        raise RuntimeError("Error inesperado durante la conversión.") from e
+        raise RuntimeError("Unexpected error during conversion.") from e

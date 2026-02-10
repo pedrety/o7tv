@@ -2,18 +2,18 @@
 
 {% block content %}
     <div class="result-card">
-        <h3>Conversión</h3>
+        <h3>Conversion</h3>
         {% if emote_url %}
             <video controls autoplay loop muted>
                 <source src="{{ emote_url }}" type="video/webm">
             </video>
             {% if emote_file %}
                 <form method="get" action="/download/{{ emote_file }}" class="inline-form download-webm">
-                    <button type="submit">Descargar WebM</button>
+                    <button type="submit">Download WebM</button>
                 </form>
             {% endif %}
         {% else %}
-            <div class="tip">Todavía no hay conversión.</div>
+            <div class="tip">No conversion yet.</div>
         {% endif %}
     </div>
 {% endblock %}
@@ -34,7 +34,7 @@
                     }
                     button.disabled = true;
                     button.classList.add("btn-loading");
-                    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Convirtiendo...</span>';
+                    button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Converting...</span>';
                 });
             });
         })();

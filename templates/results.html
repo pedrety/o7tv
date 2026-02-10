@@ -4,7 +4,7 @@
 {% if search_results %}
 <div class="section-toggle">
     <button type="button" class="toggle-button active" data-target="videos-section">Videos</button>
-    <button type="button" class="toggle-button" data-target="images-section">Imágenes</button>
+    <button type="button" class="toggle-button" data-target="images-section">Images</button>
 </div>
 <div class="result-card">
     <div id="videos-section">
@@ -17,17 +17,17 @@
                 <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
                 <form method="post" action="/convert">
                     <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
-                    <button type="submit">Convertir</button>
+        <button type="submit">Convert</button>
                 </form>
                 {% else %}
-                <div class="tip">Sin imagen disponible</div>
+        <div class="tip">No image available</div>
                 {% endif %}
             </div>
             {% endfor %}
         </div>
     </div>
     <div class="section-hidden" id="images-section">
-        <h3>Imágenes</h3>
+        <h3>Images</h3>
         <div class="grid" id="static-grid">
             {% for emote in search_results if not emote.is_animated %}
             <div class="result-item">
@@ -36,10 +36,10 @@
                 <img src="{{ emote.static_image.url }}" alt="{{ emote.name }}" />
                 <form method="get" action="/download-image">
                     <input type="hidden" name="url" value="{{ emote.static_image.url }}" />
-                    <button type="submit" class="download-button">Descargar PNG</button>
+                <button type="submit" class="download-button">Download PNG</button>
                 </form>
                 {% else %}
-                <div class="tip">Sin imagen disponible</div>
+            <div class="tip">No image available</div>
                 {% endif %}
             </div>
             {% endfor %}
@@ -48,7 +48,7 @@
     <div class="loading-container" id="scroll-status" data-page="{{ search_page or 1 }}"
         data-query="{{ search_query or '' }}">
         <div class="spinner" aria-hidden="true"></div>
-        <div class="spinner-text">Cargando más...</div>
+        <div class="spinner-text">Loading more...</div>
     </div>
 </div>
 {% endif %}
@@ -75,7 +75,7 @@
             }
             loading = true;
             status.classList.remove("is-done", "is-error");
-            status.querySelector(".spinner-text").textContent = "Cargando más...";
+        status.querySelector(".spinner-text").textContent = "Loading more...";
             const nextPage = page + 1;
             try {
                 const response = await fetch(
@@ -90,7 +90,7 @@
                 if (animatedItems.length === 0 && staticItems.length === 0) {
                     done = true;
                     status.classList.add("is-done");
-                    status.querySelector(".spinner-text").textContent = "No hay más resultados";
+        status.querySelector(".spinner-text").textContent = "No more results";
                     return;
                 }
                 animatedItems.forEach((item) => {
@@ -118,13 +118,13 @@
                         form.appendChild(hidden);
                         const button = document.createElement("button");
                         button.type = "submit";
-                        button.textContent = "Convertir";
+                        button.textContent = "Convert";
                         form.appendChild(button);
                         wrapper.appendChild(form);
                     } else {
                         const tip = document.createElement("div");
                         tip.className = "tip";
-                        tip.textContent = "Sin imagen disponible";
+                        tip.textContent = "No image available";
                         wrapper.appendChild(tip);
                     }
 
@@ -159,14 +159,14 @@
                         const button = document.createElement("button");
                         button.type = "submit";
                         button.className = "download-button";
-                        button.textContent = item.png_url ? "Descargar PNG" : "Descargar";
+                        button.textContent = item.png_url ? "Download PNG" : "Download";
                         form.appendChild(button);
 
                         wrapper.appendChild(form);
                     } else {
                         const tip = document.createElement("div");
                         tip.className = "tip";
-                        tip.textContent = "Sin imagen disponible";
+                        tip.textContent = "No image available";
                         wrapper.appendChild(tip);
                     }
 
@@ -176,7 +176,7 @@
                 status.dataset.page = String(page);
             } catch (err) {
                 status.classList.add("is-error");
-                status.querySelector(".spinner-text").textContent = "Error al cargar";
+            status.querySelector(".spinner-text").textContent = "Error loading results";
             } finally {
                 loading = false;
             }
@@ -228,7 +228,7 @@
                 }
                 button.disabled = true;
                 button.classList.add("btn-loading");
-                button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Convirtiendo...</span>';
+                button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Converting...</span>';
             });
         });
     })();
