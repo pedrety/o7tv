@@ -1,182 +1,137 @@
 # Agent Guidelines for 7tv-to-sticker
 
 ## Project Overview
-This is a Python 3.12+ FastAPI application that converts 7TV emotes to WebM sticker format. The project uses `uv` for dependency management.
+Python 3.12+ FastAPI app that converts 7TV emotes to WebM. Uses `uv` for dependency management; templates live in `templates/` and static outputs in `static/`.
 
-## Environment Setup
+## Environment Requirements
+- Python >= 3.12
+- FFmpeg installed on the system
+- `uv` package manager
 
-### Requirements
-- Python ≥ 3.12
-- FFmpeg (system package)
-- uv package manager
+## Build, Run, Lint, and Test Commands
 
-### Installation
+### Install / Sync Dependencies
 ```bash
-uv sync  # Install dependencies from uv.lock
+uv sync
 ```
 
-## Build, Lint, and Test Commands
-
-### Running the Application
+### Run the App
 ```bash
-# Development server with auto-reload
+# Dev server (reload)
 uvicorn app.main:app --app-dir src --reload --host 0.0.0.0 --port 8000
 
 # Production server
 uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8000
 
-# Using Python module
+# Run via python module
 python -m uvicorn app.main:app --app-dir src --reload
 ```
 
-### Testing
+### VSCode Debug
+See `.vscode/launch.json` (FastAPI/uvicorn config).
+
+### Tests
+**Note:** No `tests/` directory or `test.py` exists in this repo.
+If/when tests are added, prefer pytest:
 ```bash
 # Run all tests
-python test.py
+python -m pytest tests/ -v
 
-# Run specific test (pattern-based)
+# Run a single test by name or pattern
 python -m pytest tests/ -k "test_name" -v
 
-# Test with coverage
-python -m pytest --cov=src --cov-report=html
+# Run a single test file
+python -m pytest tests/test_emotes.py -v
 ```
 
-### Linting and Type Checking
+### Lint / Format / Type Check
+Pre-commit is configured; use it as the source of truth.
 ```bash
-# Format code (using black style if added)
+# Install hooks (once)
+pre-commit install
+
+# Run all pre-commit hooks
+pre-commit run --all-files
+
+# Individual tools (if installed)
 python -m black src/
-
-# Check types with pyright/pyright via IDE
-pyright src/
-
-# Check imports with isort
 python -m isort src/
-
-# Lint with ruff (if configured)
 python -m ruff check src/
+mypy src/
 ```
 
-**Note:** The project currently has no formal linting/formatting tools configured. Use this as a reference for future setup.
+### Tooling Notes
+- No CI workflows are present in `.github/workflows/`.
+- Use `uv sync` for dependency installs (uv.lock is committed).
+
+## Pre-commit Hooks (Configured)
+Defined in `.pre-commit-config.yaml`:
+- `pyupgrade`
+- `isort`
+- `black`
+- `flake8` (+ flake8-docstrings)
+- `mypy`
+- `ruff` (with `--fix`)
+- plus standard pre-commit hooks (trailing whitespace, TOML/YAML checks, etc.)
 
 ## Code Style Guidelines
 
 ### Imports
-- Group imports in this order:
-  1. Standard library (pathlib, asyncio, tempfile, etc.)
-  2. Third-party (fastapi, ffmpeg, requests, pydantic, etc.)
-  3. Local application (from app.*)
-- Use absolute imports (prefer `from app.core.config import TEMPLATES` over relative imports)
-- One import per line for clarity
-- Sort within each group alphabetically
-- **Example:** See src/app/api/v1/emotes.py and src/app/utils/http.py
+- Group imports: stdlib → third-party → local (`app.*`).
+- Use absolute imports (e.g., `from app.api.v1.emotes import router`).
+- One import per line; alphabetize within groups.
 
 ### Formatting
-- **Line length:** 88 characters (Black default)
-- **Indentation:** 4 spaces
-- **Strings:** Use double quotes (`"`)
-- **Type hints:** Always include return types and parameter types (PEP 484)
+- 4-space indentation.
+- Prefer double quotes for strings.
+- Keep lines reasonably short (Black defaults to 88 chars if used).
 
-### Type Hints and Types
-- Use modern union syntax: `Path | None` (Python 3.10+) instead of `Optional[Path]`
-- Provide complete type annotations on all function signatures
-- Use `typing.Union` only when necessary for complex types
-- Example: `def download_to_path(emote_url: str, dest: Path) -> Path | None:`
+### Types
+- Annotate all function signatures.
+- Use PEP 604 unions (`Path | None`) over `Optional[Path]`.
 
-### Naming Conventions
-- **Functions/Variables:** `snake_case` (e.g., `extract_emote_id`, `convert_to_webm`)
-- **Classes:** `PascalCase` (e.g., `Settings`, `HTTPException`)
-- **Constants:** `UPPER_SNAKE_CASE` (e.g., `STATIC_DIR`, `STATIC_URL`)
-- **Private methods:** prefix with `_` (e.g., `_internal_helper()`)
-- **Module names:** `lowercase_with_underscores`
+### Naming
+- Functions/variables: `snake_case`.
+- Classes: `PascalCase`.
+- Constants: `UPPER_SNAKE_CASE`.
+- Private helpers: prefix `_`.
 
-### Documentation
-- **Docstrings:** Use Google-style format for all functions and classes
-- Include Args, Returns, and Raises sections
-- **Example:**
-  ```python
-  def convert_to_webm(input_file: str, output_file: str) -> None:
-      """Converts a media file to WebM format, scaling and adjusting speed.
-      
-      Args:
-          input_file (str): Path to the input media file.
-          output_file (str): Path to save the converted WebM file.
-      """
-  ```
+### Docstrings
+- Use Google-style docstrings with Args/Returns/Raises.
+- Document public functions and classes.
 
 ### Error Handling
-- Explicitly catch specific exceptions, not bare `except:`
-- **Example:** `except (ValueError, IndexError): pass`
-- Use FastAPI's `HTTPException` for API errors (see src/app/api/v1/emotes.py:62)
-- Return meaningful error messages when possible
-- Log or raise exceptions appropriately (currently minimal logging)
+- Catch specific exceptions (avoid bare `except:`).
+- Use `HTTPException` for API error responses.
+- Log unexpected errors (see `services/conversion.py`).
 
-### Architecture & Structure
-- **Config:** Use Pydantic `BaseSettings` (src/app/core/config.py)
-- **API Routes:** Define in src/app/api/ with versioning (v1, v2, etc.)
-- **Services:** Business logic in src/app/services/
-- **Utils:** Helper functions in src/app/utils/ organized by concern (http.py, files.py)
-- **Models:** Data models in src/app/models/ (currently minimal)
+### Jinja/Frontend
+- Templates are Jinja2 in `templates/` with inline CSS in `templates/base.html`.
+- Keep UI strings consistent and English-only.
 
-### FastAPI Specifics
-- Use path parameters for REST endpoints: `@router.get("/download/{filename}")`
-- Use Form parameters for form submissions: `emote_url: str = Form(...)`
-- Return `TemplateResponse` for HTML responses (Jinja2 integration)
-- Use `FileResponse` for file downloads
-- Raise `HTTPException` with appropriate status codes (404, 400, etc.)
-- Async functions recommended for I/O operations
+## Architecture & Structure
+- `src/app/main.py` → FastAPI app factory
+- `src/app/api/v1/` → API routes
+- `src/app/services/` → business logic
+- `src/app/utils/` → helpers (HTTP, file utilities)
+- `src/app/models/` → Pydantic models
+- `templates/` → Jinja2 templates
+- `static/` → generated WebM outputs
 
-### Best Practices
-- Avoid broad exception handling; be specific
-- Use context managers (`with` statements) for resource management
-- Validate file paths and URLs before processing
-- Handle `Path` objects from `pathlib` instead of strings where possible
-- Use descriptive variable names that reflect intent
-- Keep functions focused on single responsibility
+## Dependency Management
+- Source of truth: `pyproject.toml` + `uv.lock`.
+- Use `uv add/remove` for dependencies; `uv lock` to update.
 
-## Project Dependencies
-- **fastapi:** Web framework
-- **uvicorn:** ASGI server
-- **ffmpeg-python:** Video encoding
-- **requests:** HTTP client
-- **pydantic:** Data validation and settings
-- **jinja2:** Template rendering
-- **gql:** GraphQL client (for potential emote API queries)
+## Configuration & Debugging
+- VSCode launch: `.vscode/launch.json` (uvicorn, reload, `--app-dir src`).
+- Config lives in `src/app/config/config.py` using `pydantic-settings`.
 
-## File Organization
-```
-src/app/
-├── __init__.py
-├── main.py           # FastAPI app factory
-├── core/
-│   ├── config.py     # Configuration (paths, settings)
-│   └── __init__.py
-├── api/
-│   ├── v1/
-│   │   ├── emotes.py # Emote conversion endpoints
-│   │   └── __init__.py
-│   └── __init__.py
-├── services/
-│   ├── conversion.py # FFmpeg conversion logic
-│   └── __init__.py
-├── utils/
-│   ├── http.py       # HTTP utilities (download)
-│   ├── files.py      # File utilities (extraction)
-│   └── __init__.py
-├── models/           # Pydantic models (empty)
-├── static/           # Converted WebM files
-└── templates/        # Jinja2 HTML templates
-```
-
-## PYTHONPATH
-The project sets `PYTHONPATH=/app/src` in Docker. Ensure imports work with:
-```python
-from app.core.config import Settings
-from app.api.v1.emotes import router
-```
+## Missing/Absent Files
+- No `.cursorrules` or `.cursor/rules`.
+- No `.github/copilot-instructions.md`.
+- README is empty.
 
 ## Common Tasks
-- **Add new endpoint:** Create route in src/app/api/v1/emotes.py, use `@router.get()` or `@router.post()`
-- **Add utility:** Create function in src/app/utils/ with proper docstring and type hints
-- **Add service logic:** Create function in src/app/services/ for reusable business logic
-- **Modify settings:** Update src/app/core/config.py using Pydantic BaseSettings
-- **Update templates:** Modify files in src/templates/ and pass variables via TemplateResponse context
+- Add new endpoint: create route in `src/app/api/v1/emotes.py`.
+- Add utility: `src/app/utils/*.py` with type hints + docstring.
+- Update templates: `templates/*.html` and pass data via `TemplateResponse`.
