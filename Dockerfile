@@ -1,23 +1,17 @@
 FROM python:3.12-slim
 WORKDIR /app
-EXPOSE 8000
 
-COPY pyproject.toml ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
-ENV PYTHONPATH="/app/src"
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN pip install --no-cache-dir \
-    uvicorn \
-    fastapi \
-    aiohttp \
-    jinja2 \
-    python-multipart \
-    ffmpeg-python \
-    requests
+# Copy dependency files and install
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
 
-RUN apt-get update && apt-get install -y ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
-
+# Copy application code
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]
