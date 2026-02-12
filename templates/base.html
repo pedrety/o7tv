@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>{{ page_title or "7TV Emote → WebM" }}</title>
+    <title>{{ "🫡TV" }}</title>
+    <link rel="icon" href="/assets/icon.png" type="image/png">
     <style>
         :root {
             --bg: #0b0c0e;
@@ -99,8 +100,21 @@
 
         .page-header .logo h1 {
             margin: 0;
-            font-size: 18px;
+            font-size: 32px;
             font-weight: 700;
+        }
+
+        .page-header .logo img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .page-header .logo span {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
         }
 
         .page-header .header-center {
@@ -176,12 +190,16 @@
         .page-footer div {
             color: var(--muted);
             font-size: 13px;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.3px;
         }
 
         .page-footer a {
             color: var(--accent);
             text-decoration: none;
             font-weight: 600;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.3px;
         }
 
         .page-footer a:hover {
@@ -548,11 +566,12 @@
 <body>
     <header class="page-header">
         <a href="/" class="logo">
-            <h1>7TV → WebM</h1>
+            <img src="/assets/icon.png" alt="o7tv">
+            <span>o7tv</span>
         </a>
         <div class="header-center">
             <form method="get" action="/search">
-                <input type="text" name="q" class="search-bar" placeholder="Search emotes..."
+                <input type="text" name="emote_name" class="search-bar" placeholder="Search emotes..."
                     value="{{ search_query or '' }}">
             </form>
         </div>
@@ -565,12 +584,15 @@
         {% block content %}{% endblock %}
     </main>
     <footer class="page-footer">
-        <div>7TV Emote → WebM • {{ year or 2026 }}</div>
+        <div>o7 tv • <span id="current-year">2026</span></div>
         <div class="made-with">
-            Made with <span aria-hidden="true">❤️</span><span class="sr-only"> love</span> by <strong>Perreti</strong>
+            This is an unofficial tool • Not affiliated with 7TV
         </div>
     </footer>
     {% block scripts %}{% endblock %}
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
 </body>
 
 </html>

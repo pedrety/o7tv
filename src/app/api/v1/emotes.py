@@ -143,21 +143,21 @@ async def convert(request: Request, emote_url: str = Form(...)) -> Response:
 
 
 @router.get("/search")
-async def search(request: Request, q: str | None = None) -> Response:
+async def search(request: Request, emote_name: str | None = None) -> Response:
     """Search emotes by name and render results.
 
     Args:
         request (Request): The incoming HTTP request.
-        q (str | None): The emote name query.
+        emote_name (str | None): The emote name query.
 
     Returns:
         Response: The rendered HTML page with search results.
     """
-    if not q or not q.strip():
+    if not emote_name or not emote_name.strip():
         return await index(request)
 
     try:
-        results = search_emotes(q)
+        results = search_emotes(emote_name)
     except (ValueError, requests.RequestException):
         return templates.TemplateResponse(
             "results.html",
@@ -165,7 +165,7 @@ async def search(request: Request, q: str | None = None) -> Response:
                 "request": request,
                 "emote_url": None,
                 "search_results": None,
-                "search_query": q,
+                "search_query": emote_name,
                 "search_page": 1,
                 "trending_results": [],
                 "error": "Unable to fetch search results",
@@ -178,7 +178,7 @@ async def search(request: Request, q: str | None = None) -> Response:
             "request": request,
             "emote_url": None,
             "search_results": results.items,
-            "search_query": q,
+            "search_query": emote_name,
             "search_page": 1,
             "trending_results": [],
         },
@@ -186,18 +186,18 @@ async def search(request: Request, q: str | None = None) -> Response:
 
 
 @router.get("/search/page")
-async def search_page(q: str, page: int = 1) -> JSONResponse:
+async def search_page(emote_name: str, page: int = 1) -> JSONResponse:
     """Return paginated search results for infinite scrolling.
 
     Args:
-        q (str): The emote name query.
+        emote_name (str): The emote name query.
         page (int): Page number to fetch.
 
     Returns:
         JSONResponse: JSON payload with items and paging info.
     """
     try:
-        results = search_emotes(q, page=page)
+        results = search_emotes(emote_name, page=page)
     except (ValueError, requests.RequestException) as exc:
         raise HTTPException(status_code=502, detail="Error querying 7TV") from exc
 

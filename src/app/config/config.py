@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="__", env_prefix="APP_"
+        env_file=".env", env_nested_delimiter="__", env_prefix="APP__"
     )
 
     templates_dir: Path = PROJECT_ROOT / "templates"

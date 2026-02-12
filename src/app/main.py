@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
@@ -15,6 +17,12 @@ def get_app() -> FastAPI:
         StaticFiles(directory=str(settings.static_dir)),
         name="static",
     )
+
+    # Mount assets directory
+    assets_dir = Path(__file__).parent.parent.parent / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
     app.include_router(emotes_router)
 
     return app

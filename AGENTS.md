@@ -1,4 +1,4 @@
-# Agent Guidelines for 7tv-to-sticker
+# Agent Guidelines for o7tv
 
 ## Project Overview
 Python 3.12+ FastAPI app that converts 7TV emotes to WebM. Uses `uv` for dependency management; templates live in `templates/` and static outputs in `static/`.

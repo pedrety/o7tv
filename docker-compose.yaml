@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: 7tv-to-sticker
+    container_name: o7tv
     ports:
       - "8000:8000"
     volumes:

@@ -79,7 +79,7 @@
             const nextPage = page + 1;
             try {
                 const response = await fetch(
-                    `/search/page?q=${encodeURIComponent(query)}&page=${nextPage}`
+                    `/search/page?emote_name=${encodeURIComponent(query)}&page=${nextPage}`
                 );
                 if (!response.ok) {
                     throw new Error("search failed");
