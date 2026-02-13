@@ -1,17 +1,14 @@
-import tempfile
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 import requests
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from o7tv.config.config import settings
-from o7tv.services.conversion import convert_to_webm
+from o7tv.services.conversion import stream_webm
 from o7tv.services.seventv import search_emotes
-from o7tv.utils.files import extract_emote_id
-from o7tv.utils.http import download_to_path
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
@@ -38,6 +35,22 @@ def _ensure_allowed_image_url(image_url: str) -> str:
         raise HTTPException(status_code=400, detail="Host not allowed")
 
     return image_url
+
+
+def _stream_response(emote_url: str, disposition: str) -> StreamingResponse:
+    emote_url = _ensure_allowed_image_url(emote_url)
+    return StreamingResponse(
+        stream_webm(emote_url),
+        media_type="video/webm",
+        headers={"Content-Disposition": disposition},
+    )
+
+
+def _resolve_emote_url(emote_url: str | None, emote_url_form: str | None) -> str:
+    resolved = emote_url or emote_url_form
+    if not resolved:
+        raise HTTPException(status_code=422, detail="emote_url is required")
+    return resolved
 
 
 @router.get("/")
@@ -92,54 +105,59 @@ async def convert(request: Request, emote_url: str = Form(...)) -> Response:
     Returns:
         TemplateResponse: The rendered HTML page with the conversion result or error message.
     """
-    emote_id = extract_emote_id(emote_url)
-    tmp_output = settings.static_dir / f"{emote_id}.webm"
-
-    if not tmp_output.exists():
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmp_input = Path(tmpdir) / f"emote_input-{emote_id}"
-            downloaded = download_to_path(emote_url, tmp_input)
-            if not downloaded:
-                return templates.TemplateResponse(
-                    "convert.html",
-                    {
-                        "request": request,
-                        "error": "Unable to download the emote from the provided URL",
-                        "emote_url": None,
-                        "search_results": None,
-                        "search_query": None,
-                        "trending_results": [],
-                    },
-                )
-
-            try:
-                convert_to_webm(str(tmp_input), str(tmp_output))
-            except RuntimeError as e:
-                return templates.TemplateResponse(
-                    "convert.html",
-                    {
-                        "request": request,
-                        "error": str(e),
-                        "emote_url": None,
-                        "search_results": None,
-                        "search_query": None,
-                        "trending_results": [],
-                    },
-                )
-
-    ver = int(tmp_output.stat().st_mtime)
+    encoded_url = quote(emote_url, safe="")
+    stream_url = f"/convert/stream?emote_url={encoded_url}"
     return templates.TemplateResponse(
         "convert.html",
         {
             "request": request,
-            "emote_url": f"/static/{tmp_output.name}?v={ver}",
-            "emote_file": tmp_output.name,
+            "emote_url": stream_url,
             "emote_name": emote_url,
             "search_results": None,
             "search_query": None,
             "trending_results": [],
         },
     )
+
+
+@router.api_route("/convert/stream", methods=["GET", "POST"])
+async def convert_stream(
+    emote_url: str | None = None, emote_url_form: str | None = Form(None)
+) -> StreamingResponse:
+    """Convert an emote URL to WebM format and stream it back in the response.
+
+    Args:
+        emote_url (str | None): The emote URL from query parameters.
+        emote_url_form (str | None): The emote URL from form data.
+
+    Returns:
+        StreamingResponse: The response streaming the converted WebM content.
+
+    Raises:
+        HTTPException: If the emote URL is missing or invalid.
+    """
+    resolved = _resolve_emote_url(emote_url, emote_url_form)
+    return _stream_response(resolved, "inline; filename=emote.webm")
+
+
+@router.api_route("/convert/download", methods=["GET", "POST"])
+async def convert_download(
+    emote_url: str | None = None, emote_url_form: str | None = Form(None)
+) -> StreamingResponse:
+    """Convert an emote URL to WebM format and stream it back as a download.
+
+    Args:
+        emote_url (str | None): The emote URL from query parameters.
+        emote_url_form (str | None): The emote URL from form data.
+
+    Returns:
+        StreamingResponse: The response streaming the converted WebM content as a download.
+
+    Raises:
+        HTTPException: If the emote URL is missing or invalid.
+    """
+    resolved = _resolve_emote_url(emote_url, emote_url_form)
+    return _stream_response(resolved, "attachment; filename=emote.webm")
 
 
 @router.get("/search")
@@ -227,24 +245,6 @@ async def search_page(emote_name: str, page: int = 1) -> JSONResponse:
             "total_count": results.total_count,
         }
     )
-
-
-@router.get("/download/{filename}")
-async def download_file(filename: str) -> FileResponse:
-    """Serve the converted webm file for download.
-
-    Args:
-        filename (str): The name of the file to download.
-
-    Returns:
-        FileResponse: The response containing the file for download.
-    """
-    path = settings.static_dir / filename
-
-    if not path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-
-    return FileResponse(path, media_type="video/webm", filename="emote.webm")
 
 
 @router.get("/download-image")

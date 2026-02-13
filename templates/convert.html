@@ -5,13 +5,20 @@
     class="border border-white/[0.06] rounded-[12px] bg-white/[0.02] p-3.5 flex flex-col items-stretch text-center flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch]">
     <h3 class="m-0 mb-2.5 text-[15px] text-[#a2a9b0]">Conversion</h3>
     {% if emote_url %}
-    <video controls autoplay loop muted
-        class="w-full max-w-[512px] h-auto rounded-[12px] bg-black my-2 mx-auto border border-white/[0.05] block">
+    <div id="video-loading"
+        class="w-full max-w-[512px] h-[160px] sm:h-[200px] rounded-[12px] bg-black/80 my-2 mx-auto border border-white/[0.05] flex items-center justify-center gap-3 text-[#a2a9b0] text-sm">
+        <span class="w-8 h-8 rounded-full border-4 border-white/[0.12] border-l-[#c15dff] animate-spin"
+            aria-hidden="true"></span>
+        <span>Preparing video...</span>
+    </div>
+    <video id="conversion-video" controls autoplay loop muted
+        class="hidden w-full max-w-[512px] h-auto rounded-[12px] bg-black my-2 mx-auto border border-white/[0.05]">
         <source src="{{ emote_url }}" type="video/webm">
     </video>
-    {% if emote_file %}
-    <form method="get" action="/download/{{ emote_file }}"
+    {% if emote_name %}
+    <form method="get" action="/convert/download"
         class="m-0 p-0 border-0 bg-transparent inline-flex items-center justify-center mt-6 sm:mt-8 w-full">
+        <input type="hidden" name="emote_url" value="{{ emote_name }}" />
         <button type="submit"
             class="px-3.5 py-2.5 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]">Download
             WebM</button>
@@ -50,6 +57,22 @@
                     '<span class="w-4 h-4 rounded-full border-2 border-[rgba(0,16,25,0.2)] border-l-[#001019] animate-spin" aria-hidden="true"></span><span>Converting...</span>';
             });
         });
+    })();
+
+    (function () {
+        const video = document.getElementById("conversion-video");
+        const loading = document.getElementById("video-loading");
+        if (!video || !loading) {
+            return;
+        }
+
+        const showVideo = () => {
+            loading.classList.add("hidden");
+            video.classList.remove("hidden");
+        };
+
+        video.addEventListener("canplay", showVideo, { once: true });
+        video.addEventListener("loadeddata", showVideo, { once: true });
     })();
 </script>
 {% endblock %}
