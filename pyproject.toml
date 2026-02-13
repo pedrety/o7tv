@@ -9,8 +9,8 @@ description = "Convert 7TV emotes to WebM files with a modern web interface"
 readme = "README.md"
 requires-python = ">=3.12"
 keywords = ["7tv", "emotes", "webm", "ffmpeg", "converter"]
-authors = [{ name = "pedrety", email = "you@example.com" }]
-maintainers = [{ name = "pedrety", email = "you@example.com" }]
+authors = [{ name = "pedrety"}]
+maintainers = [{ name = "pedrety"}]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Operating System :: OS Independent",
