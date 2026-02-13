@@ -31,9 +31,10 @@
             {% if emote.image %}
             <img src="{{ emote.image.url }}" alt="{{ emote.name }}"
                 class="w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] object-contain" />
-            <form method="post" action="/convert"
+            <form method="post" action="/convert/download"
                 class="m-0 p-0 border-0 bg-transparent w-auto inline-flex items-center justify-center">
                 <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
+                <input type="hidden" name="emote_name" value="{{ emote.name }}" />
                 <button type="submit"
                     class="px-3 py-2 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]">Convert</button>
             </form>
@@ -49,31 +50,5 @@
 
 {% block scripts %}
 <script>
-    (function () {
-        const forms = document.querySelectorAll("form[action='/convert']");
-        if (!forms.length) {
-            return;
-        }
-
-        forms.forEach((form) => {
-            form.addEventListener("submit", () => {
-                const button = form.querySelector("button");
-                if (!button) {
-                    return;
-                }
-                button.disabled = true;
-                button.classList.add(
-                    "inline-flex",
-                    "items-center",
-                    "justify-center",
-                    "gap-2",
-                    "opacity-85",
-                    "cursor-wait"
-                );
-                button.innerHTML =
-                    '<span class="w-4 h-4 rounded-full border-2 border-[rgba(0,16,25,0.2)] border-l-[#001019] animate-spin" aria-hidden="true"></span><span>Converting...</span>';
-            });
-        });
-    })();
 </script>
 {% endblock %}

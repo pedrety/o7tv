@@ -1,5 +1,5 @@
 from pathlib import Path
-from urllib.parse import quote, unquote, urlparse
+from urllib.parse import unquote, urlparse
 
 import requests
 from fastapi import APIRouter, Form, HTTPException, Request
@@ -9,48 +9,24 @@ from fastapi.templating import Jinja2Templates
 from o7tv.config.config import settings
 from o7tv.services.conversion import stream_webm
 from o7tv.services.seventv import search_emotes
+from o7tv.utils.http import (
+    content_disposition,
+    ensure_allowed_image_url,
+    resolve_emote_url,
+    safe_filename,
+)
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
-def _ensure_allowed_image_url(image_url: str) -> str:
-    """Validate image URL for download proxy.
-
-    Args:
-        image_url (str): The image URL to validate.
-
-    Returns:
-        str: The validated URL.
-
-    Raises:
-        HTTPException: If the URL is invalid or not allowed.
-    """
-    parsed = urlparse(image_url)
-    if parsed.scheme not in {"http", "https"}:
-        raise HTTPException(status_code=400, detail="Invalid URL")
-
-    hostname = (parsed.hostname or "").lower()
-    if not (hostname.endswith("7tv.app") or hostname.endswith("7tvcdn.net")):
-        raise HTTPException(status_code=400, detail="Host not allowed")
-
-    return image_url
-
-
 def _stream_response(emote_url: str, disposition: str) -> StreamingResponse:
-    emote_url = _ensure_allowed_image_url(emote_url)
+    emote_url = ensure_allowed_image_url(emote_url)
     return StreamingResponse(
         stream_webm(emote_url),
         media_type="video/webm",
         headers={"Content-Disposition": disposition},
     )
-
-
-def _resolve_emote_url(emote_url: str | None, emote_url_form: str | None) -> str:
-    resolved = emote_url or emote_url_form
-    if not resolved:
-        raise HTTPException(status_code=422, detail="emote_url is required")
-    return resolved
 
 
 @router.get("/")
@@ -94,70 +70,29 @@ async def index(request: Request, sort: str = "TOP_ALL_TIME") -> Response:
     )
 
 
-@router.post("/convert")
-async def convert(request: Request, emote_url: str = Form(...)) -> Response:
+@router.api_route("/convert/download", methods=["GET", "POST"])
+async def convert_download(
+    emote_url: str | None = None,
+    emote_url_form: str | None = Form(None, alias="emote_url"),
+    emote_name: str | None = None,
+    emote_name_form: str | None = Form(None, alias="emote_name"),
+) -> StreamingResponse:
     """Handle the form submission to convert an emote URL to a webm file.
 
     Args:
-        request (Request): The incoming HTTP request.
-        emote_url (str): The URL of the emote to convert.
+        emote_url (str | None): The URL from query parameters.
+        emote_url_form (str | None): The URL from form data.
+        emote_name (str | None): The emote name from query parameters.
+        emote_name_form (str | None): The emote name from form data.
 
     Returns:
-        TemplateResponse: The rendered HTML page with the conversion result or error message.
+        StreamingResponse: The streaming response with the converted webm file.
     """
-    encoded_url = quote(emote_url, safe="")
-    stream_url = f"/convert/stream?emote_url={encoded_url}"
-    return templates.TemplateResponse(
-        "convert.html",
-        {
-            "request": request,
-            "emote_url": stream_url,
-            "emote_name": emote_url,
-            "search_results": None,
-            "search_query": None,
-            "trending_results": [],
-        },
-    )
-
-
-@router.api_route("/convert/stream", methods=["GET", "POST"])
-async def convert_stream(
-    emote_url: str | None = None, emote_url_form: str | None = Form(None)
-) -> StreamingResponse:
-    """Convert an emote URL to WebM format and stream it back in the response.
-
-    Args:
-        emote_url (str | None): The emote URL from query parameters.
-        emote_url_form (str | None): The emote URL from form data.
-
-    Returns:
-        StreamingResponse: The response streaming the converted WebM content.
-
-    Raises:
-        HTTPException: If the emote URL is missing or invalid.
-    """
-    resolved = _resolve_emote_url(emote_url, emote_url_form)
-    return _stream_response(resolved, "inline; filename=emote.webm")
-
-
-@router.api_route("/convert/download", methods=["GET", "POST"])
-async def convert_download(
-    emote_url: str | None = None, emote_url_form: str | None = Form(None)
-) -> StreamingResponse:
-    """Convert an emote URL to WebM format and stream it back as a download.
-
-    Args:
-        emote_url (str | None): The emote URL from query parameters.
-        emote_url_form (str | None): The emote URL from form data.
-
-    Returns:
-        StreamingResponse: The response streaming the converted WebM content as a download.
-
-    Raises:
-        HTTPException: If the emote URL is missing or invalid.
-    """
-    resolved = _resolve_emote_url(emote_url, emote_url_form)
-    return _stream_response(resolved, "attachment; filename=emote.webm")
+    resolved = resolve_emote_url(emote_url, emote_url_form)
+    original = emote_name or emote_name_form
+    filename = safe_filename(original)
+    disposition = content_disposition(filename, original)
+    return _stream_response(resolved, disposition)
 
 
 @router.get("/search")
@@ -257,9 +192,9 @@ async def download_image(url: str) -> Response:
     Returns:
         Response: The response containing the image content.
     """
-    image_url = _ensure_allowed_image_url(url)
+    image_url = ensure_allowed_image_url(url)
     try:
-        response = requests.get(image_url, timeout=15)
+        response = requests.get(image_url, stream=True, timeout=15)
         response.raise_for_status()
     except requests.RequestException as exc:
         raise HTTPException(status_code=502, detail="Error downloading image") from exc
@@ -268,4 +203,8 @@ async def download_image(url: str) -> Response:
     filename = Path(urlparse(image_url).path).name or "emote"
     filename = unquote(filename)
     headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    return Response(content=response.content, media_type=content_type, headers=headers)
+    return StreamingResponse(
+        response.iter_content(chunk_size=64 * 1024),
+        media_type=content_type,
+        headers=headers,
+    )

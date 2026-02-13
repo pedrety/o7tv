@@ -3,20 +3,12 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from o7tv.api.v1.emotes import router as emotes_router
-from o7tv.config.config import settings
+from o7tv.api.emotes import router as emotes_router
 
 
 def get_app() -> FastAPI:
     """Creates and configures the FastAPI application."""
     app = FastAPI()
-
-    settings.static_dir.mkdir(exist_ok=True)
-    app.mount(
-        settings.static_url,
-        StaticFiles(directory=str(settings.static_dir)),
-        name="static",
-    )
 
     # Mount assets directory
     assets_dir = Path(__file__).parent.parent.parent / "assets"

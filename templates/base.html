@@ -55,6 +55,91 @@
     </footer>
     {% block scripts %}{% endblock %}
     <script>
+        window.o7tvFilenameFromHeaders = (response, fallback) => {
+            const disposition = response.headers.get("Content-Disposition") || "";
+            const starMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+            if (starMatch?.[1]) {
+                try {
+                    return decodeURIComponent(starMatch[1]);
+                } catch {
+                    return starMatch[1];
+                }
+            }
+            const match = disposition.match(/filename="?([^";]+)"?/i);
+            if (match?.[1]) {
+                return match[1];
+            }
+            return fallback;
+        };
+        window.o7tvSafeFilename = (value, fallback) => {
+            const safeName = value?.trim().replace(/[^A-Za-z0-9._-]+/g, " ") || fallback;
+            return `${safeName}.webm`;
+        };
+        window.o7tvHandleConvertSubmit = async (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+            const action = form.getAttribute("action");
+            if (action !== "/convert/download") {
+                return;
+            }
+            event.preventDefault();
+            const button = form.querySelector("button");
+            if (!button) {
+                return;
+            }
+            if (form.action.endsWith("/download-image")) {
+                return;
+            }
+            if (!button.dataset.originalHtml) {
+                button.dataset.originalHtml = button.innerHTML;
+                button.dataset.originalClass = button.className;
+            }
+
+            button.disabled = true;
+            button.classList.add(
+                "inline-flex",
+                "items-center",
+                "justify-center",
+                "gap-2",
+                "opacity-85",
+                "cursor-wait"
+            );
+            button.innerHTML =
+                '<span class="w-4 h-4 rounded-full border-2 border-[rgba(0,16,25,0.2)] border-l-[#001019] animate-spin" aria-hidden="true"></span><span>Converting...</span>';
+
+            try {
+                const response = await fetch("/convert/download", {
+                    method: "POST",
+                    body: new FormData(form),
+                });
+                if (!response.ok) {
+                    throw new Error("download failed");
+                }
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                const nameInput = form.querySelector("input[name='emote_name']");
+                const fallbackName = window.o7tvSafeFilename(nameInput?.value, "emote");
+                link.download = window.o7tvFilenameFromHeaders(response, fallbackName);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+
+                button.className = button.dataset.originalClass || button.className;
+                button.classList.add("opacity-80", "cursor-not-allowed");
+                button.innerHTML = "Downloaded";
+                button.disabled = true;
+            } catch (err) {
+                button.className = button.dataset.originalClass || button.className;
+                button.innerHTML = button.dataset.originalHtml || "Convert";
+                button.disabled = false;
+            }
+        };
+        document.addEventListener("submit", window.o7tvHandleConvertSubmit);
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
 </body>
