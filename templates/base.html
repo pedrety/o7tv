@@ -21,11 +21,11 @@
 </head>
 
 <body
-    class="m-0 p-8 h-screen overflow-hidden text-[#eef1f4] font-sans flex flex-col gap-6 bg-[radial-gradient(circle_at_20%_20%,rgba(125,211,252,0.08),transparent_25%),radial-gradient(circle_at_80%_10%,rgba(165,230,255,0.06),transparent_22%),linear-gradient(145deg,#0b0c0e_0%,#0f1114_50%,#0a0b0c_100%)] bg-fixed">
+    class="m-0 p-4 sm:p-6 lg:p-8 h-screen overflow-hidden text-[#eef1f4] font-sans flex flex-col gap-4 sm:gap-6 bg-[radial-gradient(circle_at_20%_20%,rgba(125,211,252,0.08),transparent_25%),radial-gradient(circle_at_80%_10%,rgba(165,230,255,0.06),transparent_22%),linear-gradient(145deg,#0b0c0e_0%,#0f1114_50%,#0a0b0c_100%)] bg-fixed">
     <header
-        class="w-[min(1200px,96%)] mx-auto bg-[linear-gradient(160deg,#141517_0%,#1a1c1f_100%)] border border-white/[0.04] shadow-[0_16px_60px_rgba(0,0,0,0.45)] rounded-2xl px-7 py-4 grid grid-cols-[1fr_minmax(0,500px)_1fr] items-center gap-5 flex-shrink-0">
+        class="w-[min(1200px,96%)] mx-auto bg-[linear-gradient(160deg,#141517_0%,#1a1c1f_100%)] border border-white/[0.04] shadow-[0_16px_60px_rgba(0,0,0,0.45)] rounded-2xl px-4 sm:px-6 lg:px-7 py-3 sm:py-4 grid grid-cols-1 sm:grid-cols-[1fr_minmax(0,500px)_1fr] items-center gap-3 sm:gap-5 flex-shrink-0 justify-items-center sm:justify-items-stretch">
         <a href="/"
-            class="flex items-center gap-3 no-underline text-[#eef1f4] transition-transform duration-150 hover:-translate-y-[2px] justify-self-start">
+            class="flex items-center gap-3 no-underline text-[#eef1f4] transition-transform duration-150 hover:-translate-y-[2px] justify-self-center sm:justify-self-start">
             <img src="/assets/icon.png" alt="o7tv" class="w-10 h-10 object-contain">
             <span class="text-[20px] font-bold font-mono tracking-[0.5px]">o7tv</span>
         </a>
@@ -38,7 +38,7 @@
         </div>
     </header>
     <main
-        class="w-[min(1200px,96%)] mx-auto bg-[linear-gradient(160deg,#141517_0%,#1a1c1f_100%)] border border-white/[0.04] shadow-[0_16px_60px_rgba(0,0,0,0.45)] rounded-2xl p-7 flex flex-col gap-[18px] flex-1 min-h-0 overflow-hidden [&::-webkit-scrollbar]:hidden">
+        class="w-[min(1200px,96%)] mx-auto bg-[linear-gradient(160deg,#141517_0%,#1a1c1f_100%)] border border-white/[0.04] shadow-[0_16px_60px_rgba(0,0,0,0.45)] rounded-2xl p-4 sm:p-6 lg:p-7 flex flex-col gap-4 sm:gap-[18px] flex-1 min-h-0 overflow-hidden [&::-webkit-scrollbar]:hidden">
         {% if error %}
         <p class="text-[#ff6b6b] text-sm m-0">{{ error }}</p>
         {% endif %}
@@ -46,7 +46,7 @@
         {% block content %}{% endblock %}
     </main>
     <footer
-        class="w-[min(1200px,96%)] mx-auto bg-[linear-gradient(160deg,#141517_0%,#1a1c1f_100%)] border border-white/[0.04] shadow-[0_16px_60px_rgba(0,0,0,0.45)] rounded-2xl px-7 py-4 flex flex-wrap items-center justify-between gap-5 flex-shrink-0">
+        class="w-[min(1200px,96%)] mx-auto bg-[linear-gradient(160deg,#141517_0%,#1a1c1f_100%)] border border-white/[0.04] shadow-[0_16px_60px_rgba(0,0,0,0.45)] rounded-2xl px-4 sm:px-6 lg:px-7 py-3 sm:py-4 flex flex-col sm:flex-row flex-wrap items-center sm:justify-between gap-2 sm:gap-5 flex-shrink-0 text-center sm:text-left">
         <div class="text-[#a2a9b0] text-[13px] font-mono tracking-[0.3px]">o7 tv • <span id="current-year">2026</span>
         </div>
         <div class="text-[#a2a9b0] text-[13px] font-mono tracking-[0.3px]">
