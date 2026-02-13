@@ -1,5 +1,3 @@
-# 🫡 TV
-
 <div align="center">
   <img src="assets/icon.png" alt="o7tv icon" width="120" height="120">
 </div>
