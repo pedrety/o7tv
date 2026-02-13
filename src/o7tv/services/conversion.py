@@ -82,9 +82,7 @@ def convert_to_webm(input_file: str, output_file: str) -> None:
                 "Unable to recognize the file format. Make sure it is a valid GIF or video."
             ) from e
         else:
-            raise RuntimeError(
-                f"Unable to convert the emote: {stderr_msg[:200]}"
-            ) from e
+            raise RuntimeError(f"Unable to convert the emote: {stderr_msg[:200]}") from e
     except Exception as e:
         logger.error(f"Unexpected error during conversion of {input_file}: {e}")
         raise RuntimeError("Unexpected error during conversion.") from e

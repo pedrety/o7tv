@@ -1,6 +1,6 @@
 import requests
 
-from app.config.config import settings
+from o7tv.config.config import settings
 
 from ..models.emotes import EmoteImage, EmoteResult, EmoteSearchResponse
 
@@ -21,9 +21,7 @@ def _select_best_image(images: list[EmoteImage]) -> EmoteImage | None:
     candidates = animated or images
     gif_candidates = [img for img in candidates if img.mime == "image/gif"]
     if gif_candidates:
-        return max(
-            gif_candidates, key=lambda img: (img.scale or 0, img.width, img.height)
-        )
+        return max(gif_candidates, key=lambda img: (img.scale or 0, img.width, img.height))
     return max(candidates, key=lambda img: (img.width, img.height))
 
 

@@ -7,11 +7,11 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
 
-from app.config.config import settings
-from app.services.conversion import convert_to_webm
-from app.services.seventv import search_emotes
-from app.utils.files import extract_emote_id
-from app.utils.http import download_to_path
+from o7tv.config.config import settings
+from o7tv.services.conversion import convert_to_webm
+from o7tv.services.seventv import search_emotes
+from o7tv.utils.files import extract_emote_id
+from o7tv.utils.http import download_to_path
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(settings.templates_dir))

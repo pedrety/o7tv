@@ -3,8 +3,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v1.emotes import router as emotes_router
-from app.config.config import settings
+from o7tv.api.v1.emotes import router as emotes_router
+from o7tv.config.config import settings
 
 
 def get_app() -> FastAPI:
