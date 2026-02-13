@@ -2,53 +2,67 @@
 
 {% block content %}
 {% if search_results %}
-<div class="section-toggle">
-    <button type="button" class="toggle-button active" data-target="videos-section">Videos</button>
-    <button type="button" class="toggle-button" data-target="images-section">Images</button>
+<div class="flex gap-2.5">
+    <button type="button"
+        class="flex-1 px-3 py-2.5 rounded-[10px] border border-white/[0.08] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-semibold cursor-pointer border-transparent"
+        data-target="videos-section">Videos</button>
+    <button type="button"
+        class="flex-1 px-3 py-2.5 rounded-[10px] border border-white/[0.08] bg-white/[0.04] text-[#eef1f4] font-semibold cursor-pointer"
+        data-target="images-section">Images</button>
 </div>
-<div class="result-card">
+<div
+    class="border border-white/[0.06] rounded-[12px] bg-white/[0.02] p-3.5 flex flex-col items-stretch text-center flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch]">
     <div id="videos-section">
-        <h3>Videos</h3>
-        <div class="grid" id="search-grid">
+        <h3 class="m-0 mb-2.5 text-[15px] text-[#a2a9b0]">Videos</h3>
+        <div class="w-full grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mt-3" id="search-grid">
             {% for emote in search_results if emote.is_animated %}
-            <div class="result-item">
-                <div class="name">{{ emote.name }}</div>
+            <div
+                class="p-2.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] flex flex-col items-center gap-2">
+                <div class="text-xs text-[#a2a9b0] break-words">{{ emote.name }}</div>
                 {% if emote.image %}
-                <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
-                <form method="post" action="/convert">
+                <img src="{{ emote.image.url }}" alt="{{ emote.name }}" class="w-[140px] h-[140px] object-contain" />
+                <form method="post" action="/convert"
+                    class="m-0 p-0 border-0 bg-transparent w-auto inline-flex items-center justify-center">
                     <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
-        <button type="submit">Convert</button>
+                    <button type="submit"
+                        class="px-3 py-2 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]">Convert</button>
                 </form>
                 {% else %}
-        <div class="tip">No image available</div>
+                <div class="text-[#a2a9b0] text-xs mt-[-2px]">No image available</div>
                 {% endif %}
             </div>
             {% endfor %}
         </div>
     </div>
-    <div class="section-hidden" id="images-section">
-        <h3>Images</h3>
-        <div class="grid" id="static-grid">
+    <div class="hidden" id="images-section">
+        <h3 class="m-0 mb-2.5 text-[15px] text-[#a2a9b0]">Images</h3>
+        <div class="w-full grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mt-3" id="static-grid">
             {% for emote in search_results if not emote.is_animated %}
-            <div class="result-item">
-                <div class="name">{{ emote.name }}</div>
+            <div
+                class="p-2.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] flex flex-col items-center gap-2">
+                <div class="text-xs text-[#a2a9b0] break-words">{{ emote.name }}</div>
                 {% if emote.static_image %}
-                <img src="{{ emote.static_image.url }}" alt="{{ emote.name }}" />
-                <form method="get" action="/download-image">
+                <img src="{{ emote.static_image.url }}" alt="{{ emote.name }}"
+                    class="w-[140px] h-[140px] object-contain" />
+                <form method="get" action="/download-image"
+                    class="m-0 p-0 border-0 bg-transparent w-auto inline-flex items-center justify-center">
                     <input type="hidden" name="url" value="{{ emote.static_image.url }}" />
-                <button type="submit" class="download-button">Download PNG</button>
+                    <button type="submit"
+                        class="px-3 py-2 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]">Download
+                        PNG</button>
                 </form>
                 {% else %}
-            <div class="tip">No image available</div>
+                <div class="text-[#a2a9b0] text-xs mt-[-2px]">No image available</div>
                 {% endif %}
             </div>
             {% endfor %}
         </div>
     </div>
-    <div class="loading-container" id="scroll-status" data-page="{{ search_page or 1 }}"
-        data-query="{{ search_query or '' }}">
-        <div class="spinner" aria-hidden="true"></div>
-        <div class="spinner-text">Loading more...</div>
+    <div class="w-full flex items-center justify-center gap-3 py-5 pb-1.5 text-[#a2a9b0] text-sm" id="scroll-status"
+        data-page="{{ search_page or 1 }}" data-query="{{ search_query or '' }}">
+        <div class="w-11 h-11 rounded-full border-4 border-white/[0.12] border-l-[#c15dff] animate-spin status-spinner"
+            aria-hidden="true"></div>
+        <div class="text-sm status-text">Loading more...</div>
     </div>
 </div>
 {% endif %}
@@ -74,8 +88,15 @@
                 return;
             }
             loading = true;
-            status.classList.remove("is-done", "is-error");
-        status.querySelector(".spinner-text").textContent = "Loading more...";
+            status.dataset.state = "loading";
+            const statusText = status.querySelector(".status-text");
+            const spinner = status.querySelector(".status-spinner");
+            if (spinner) {
+                spinner.classList.remove("hidden");
+            }
+            if (statusText) {
+                statusText.textContent = "Loading more...";
+            }
             const nextPage = page + 1;
             try {
                 const response = await fetch(
@@ -89,16 +110,23 @@
                 const staticItems = data.static_items || [];
                 if (animatedItems.length === 0 && staticItems.length === 0) {
                     done = true;
-                    status.classList.add("is-done");
-        status.querySelector(".spinner-text").textContent = "No more results";
+                    status.dataset.state = "done";
+                    if (spinner) {
+                        spinner.classList.add("hidden");
+                    }
+                    const doneText = status.querySelector(".status-text");
+                    if (doneText) {
+                        doneText.textContent = "No more results";
+                    }
                     return;
                 }
                 animatedItems.forEach((item) => {
                     const wrapper = document.createElement("div");
-                    wrapper.className = "result-item";
+                    wrapper.className =
+                        "p-2.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] flex flex-col items-center gap-2";
 
                     const name = document.createElement("div");
-                    name.className = "name";
+                    name.className = "text-xs text-[#a2a9b0] break-words";
                     name.textContent = item.name;
                     wrapper.appendChild(name);
 
@@ -106,11 +134,14 @@
                         const img = document.createElement("img");
                         img.src = item.image_url;
                         img.alt = item.name;
+                        img.className = "w-[140px] h-[140px] object-contain";
                         wrapper.appendChild(img);
 
                         const form = document.createElement("form");
                         form.method = "post";
                         form.action = "/convert";
+                        form.className =
+                            "m-0 p-0 border-0 bg-transparent w-auto inline-flex items-center justify-center";
                         const hidden = document.createElement("input");
                         hidden.type = "hidden";
                         hidden.name = "emote_url";
@@ -118,12 +149,14 @@
                         form.appendChild(hidden);
                         const button = document.createElement("button");
                         button.type = "submit";
+                        button.className =
+                            "px-3 py-2 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]";
                         button.textContent = "Convert";
                         form.appendChild(button);
                         wrapper.appendChild(form);
                     } else {
                         const tip = document.createElement("div");
-                        tip.className = "tip";
+                        tip.className = "text-[#a2a9b0] text-xs mt-[-2px]";
                         tip.textContent = "No image available";
                         wrapper.appendChild(tip);
                     }
@@ -132,10 +165,11 @@
                 });
                 staticItems.forEach((item) => {
                     const wrapper = document.createElement("div");
-                    wrapper.className = "result-item";
+                    wrapper.className =
+                        "p-2.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] flex flex-col items-center gap-2";
 
                     const name = document.createElement("div");
-                    name.className = "name";
+                    name.className = "text-xs text-[#a2a9b0] break-words";
                     name.textContent = item.name;
                     wrapper.appendChild(name);
 
@@ -144,11 +178,14 @@
                         const img = document.createElement("img");
                         img.src = previewUrl;
                         img.alt = item.name;
+                        img.className = "w-[140px] h-[140px] object-contain";
                         wrapper.appendChild(img);
 
                         const form = document.createElement("form");
                         form.method = "get";
                         form.action = "/download-image";
+                        form.className =
+                            "m-0 p-0 border-0 bg-transparent w-auto inline-flex items-center justify-center";
 
                         const hidden = document.createElement("input");
                         hidden.type = "hidden";
@@ -158,14 +195,15 @@
 
                         const button = document.createElement("button");
                         button.type = "submit";
-                        button.className = "download-button";
+                        button.className =
+                            "px-3 py-2 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]";
                         button.textContent = item.png_url ? "Download PNG" : "Download";
                         form.appendChild(button);
 
                         wrapper.appendChild(form);
                     } else {
                         const tip = document.createElement("div");
-                        tip.className = "tip";
+                        tip.className = "text-[#a2a9b0] text-xs mt-[-2px]";
                         tip.textContent = "No image available";
                         wrapper.appendChild(tip);
                     }
@@ -175,14 +213,20 @@
                 page = nextPage;
                 status.dataset.page = String(page);
             } catch (err) {
-                status.classList.add("is-error");
-            status.querySelector(".spinner-text").textContent = "Error loading results";
+                status.dataset.state = "error";
+                if (spinner) {
+                    spinner.classList.add("hidden");
+                }
+                const errorText = status.querySelector(".status-text");
+                if (errorText) {
+                    errorText.textContent = "Error loading results";
+                }
             } finally {
                 loading = false;
             }
         }
 
-        const scrollRoot = document.querySelector(".panel");
+        const scrollRoot = document.querySelector("main");
         const observer = new IntersectionObserver((entries) => {
             if (entries.some((entry) => entry.isIntersecting)) {
                 loadMore();
@@ -192,7 +236,7 @@
     })();
 
     (function () {
-        const toggleButtons = document.querySelectorAll(".toggle-button");
+        const toggleButtons = document.querySelectorAll("[data-target]");
         const videosSection = document.getElementById("videos-section");
         const imagesSection = document.getElementById("images-section");
         if (!toggleButtons.length || !videosSection || !imagesSection) {
@@ -201,14 +245,34 @@
 
         toggleButtons.forEach((button) => {
             button.addEventListener("click", () => {
-                toggleButtons.forEach((btn) => btn.classList.remove("active"));
-                button.classList.add("active");
+                toggleButtons.forEach((btn) => {
+                    btn.classList.remove(
+                        "bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)]",
+                        "text-[#001019]",
+                        "border-transparent"
+                    );
+                    btn.classList.add(
+                        "bg-white/[0.04]",
+                        "border-white/[0.08]",
+                        "text-[#eef1f4]"
+                    );
+                });
+                button.classList.remove(
+                    "bg-white/[0.04]",
+                    "border-white/[0.08]",
+                    "text-[#eef1f4]"
+                );
+                button.classList.add(
+                    "bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)]",
+                    "text-[#001019]",
+                    "border-transparent"
+                );
                 if (button.dataset.target === "images-section") {
-                    videosSection.classList.add("section-hidden");
-                    imagesSection.classList.remove("section-hidden");
+                    videosSection.classList.add("hidden");
+                    imagesSection.classList.remove("hidden");
                 } else {
-                    imagesSection.classList.add("section-hidden");
-                    videosSection.classList.remove("section-hidden");
+                    imagesSection.classList.add("hidden");
+                    videosSection.classList.remove("hidden");
                 }
             });
         });
@@ -227,8 +291,16 @@
                     return;
                 }
                 button.disabled = true;
-                button.classList.add("btn-loading");
-                button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Converting...</span>';
+                button.classList.add(
+                    "inline-flex",
+                    "items-center",
+                    "justify-center",
+                    "gap-2",
+                    "opacity-85",
+                    "cursor-wait"
+                );
+                button.innerHTML =
+                    '<span class="w-4 h-4 rounded-full border-2 border-[rgba(0,16,25,0.2)] border-l-[#001019] animate-spin" aria-hidden="true"></span><span>Converting...</span>';
             });
         });
     })();

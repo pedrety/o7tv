@@ -1,20 +1,21 @@
 {% extends "base.html" %}
 
 {% block sidebar %}
-<div class="nav">
+<div class="flex gap-2 flex-wrap mb-4">
     <a href="/?sort=TOP_ALL_TIME"
-        class="{% if not request.query_params.get('sort') or request.query_params.get('sort') == 'TOP_ALL_TIME' %}active{% endif %}">Top</a>
+        class="px-3.5 py-2 rounded-lg bg-white/[0.06] border border-white/[0.14] text-[#d7dce1] no-underline font-semibold text-[13px] transition hover:bg-[rgba(108,255,255,0.14)] hover:border-[rgba(108,255,255,0.35)] hover:text-white {% if not request.query_params.get('sort') or request.query_params.get('sort') == 'TOP_ALL_TIME' %}bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#0b0f14] border-transparent{% endif %}">Top</a>
     <a href="/?sort=TRENDING_DAILY"
-        class="{% if request.query_params.get('sort') == 'TRENDING_DAILY' %}active{% endif %}">Trending</a>
+        class="px-3.5 py-2 rounded-lg bg-white/[0.06] border border-white/[0.14] text-[#d7dce1] no-underline font-semibold text-[13px] transition hover:bg-[rgba(108,255,255,0.14)] hover:border-[rgba(108,255,255,0.35)] hover:text-white {% if request.query_params.get('sort') == 'TRENDING_DAILY' %}bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#0b0f14] border-transparent{% endif %}">Trending</a>
     <a href="/?sort=UPLOAD_DATE"
-        class="{% if request.query_params.get('sort') == 'UPLOAD_DATE' %}active{% endif %}">New</a>
+        class="px-3.5 py-2 rounded-lg bg-white/[0.06] border border-white/[0.14] text-[#d7dce1] no-underline font-semibold text-[13px] transition hover:bg-[rgba(108,255,255,0.14)] hover:border-[rgba(108,255,255,0.35)] hover:text-white {% if request.query_params.get('sort') == 'UPLOAD_DATE' %}bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#0b0f14] border-transparent{% endif %}">New</a>
 </div>
 {% endblock %}
 
 {% block content %}
 {% if trending_results %}
-<div class="result-card">
-    <h3>
+<div
+    class="border border-white/[0.06] rounded-[12px] bg-white/[0.02] p-3.5 flex flex-col items-stretch text-center flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch]">
+    <h3 class="m-0 mb-2.5 text-[15px] text-[#a2a9b0]">
         {% if request.query_params.get('sort') == 'TOP_ALL_TIME' %}
         All-time top
         {% elif request.query_params.get('sort') == 'UPLOAD_DATE' %}
@@ -23,18 +24,20 @@
         Trending today
         {% endif %}
     </h3>
-    <div class="grid grid-top">
+    <div class="w-full grid grid-cols-[repeat(3,minmax(0,1fr))] gap-4 mt-3">
         {% for emote in trending_results %}
-        <div class="result-item">
-            <div class="name">{{ emote.name }}</div>
+        <div class="p-2.5 rounded-[12px] bg-white/[0.03] border border-white/[0.06] flex flex-col items-center gap-2">
+            <div class="text-xs text-[#a2a9b0] break-words">{{ emote.name }}</div>
             {% if emote.image %}
-            <img src="{{ emote.image.url }}" alt="{{ emote.name }}" />
-            <form method="post" action="/convert">
+            <img src="{{ emote.image.url }}" alt="{{ emote.name }}" class="w-[140px] h-[140px] object-contain" />
+            <form method="post" action="/convert"
+                class="m-0 p-0 border-0 bg-transparent w-auto inline-flex items-center justify-center">
                 <input type="hidden" name="emote_url" value="{{ emote.image.url }}" />
-                <button type="submit">Convert</button>
+                <button type="submit"
+                    class="px-3 py-2 text-[13px] rounded-[10px] bg-[linear-gradient(120deg,#c15dff_0%,#d296fa_100%)] text-[#001019] font-bold shadow-[0_6px_18px_rgba(108,255,255,0.2)] transition active:translate-y-[1px]">Convert</button>
             </form>
             {% else %}
-            <div class="tip">No image available</div>
+            <div class="text-[#a2a9b0] text-xs mt-[-2px]">No image available</div>
             {% endif %}
         </div>
         {% endfor %}
@@ -58,8 +61,16 @@
                     return;
                 }
                 button.disabled = true;
-                button.classList.add("btn-loading");
-                button.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Converting...</span>';
+                button.classList.add(
+                    "inline-flex",
+                    "items-center",
+                    "justify-center",
+                    "gap-2",
+                    "opacity-85",
+                    "cursor-wait"
+                );
+                button.innerHTML =
+                    '<span class="w-4 h-4 rounded-full border-2 border-[rgba(0,16,25,0.2)] border-l-[#001019] animate-spin" aria-hidden="true"></span><span>Converting...</span>';
             });
         });
     })();
