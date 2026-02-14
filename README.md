@@ -58,6 +58,7 @@ o7tv/
 │       ├── main.py       # FastAPI app factory
 │       ├── api/          # HTTP routes and endpoints
 │       ├── config/       # Configuration management
+│       ├── exceptions/   # Custom exception classes
 │       ├── models/       # Data models and schemas 
 │       ├── services/     # Business logic and conversion pipeline
 │       └── utils/        # Utility functions
