@@ -1,0 +1,47 @@
+name: Scheduled Docs Update
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  opencode:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Determine if docs update is needed
+        id: gate
+        run: |
+          git fetch origin main
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+          CODE_CHANGED=$(echo "$CHANGED" | grep -E '^src/|^templates/|^pyproject.toml' || true)
+          DOCS_CHANGED=$(echo "$CHANGED" | grep -E '^docs/|^README.md|^CHANGELOG.md' || true)
+          if [ -n "$CODE_CHANGED" ] && [ -z "$DOCS_CHANGED" ]; then
+            echo "needs_docs=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_docs=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Exit if no docs update needed
+        if: steps.gate.outputs.needs_docs != 'true'
+        run: echo "No docs update required"
+
+      - name: Run OpenCode
+        if: steps.gate.outputs.needs_docs == 'true'
+        uses: anomalyco/opencode/github@latest
+        with:
+          model: opencode/gpt-5-nano
+          prompt: |
+            Update functional docs in /docs based on recent code changes.
+            Do NOT modify source code. Only edit docs/ (and README/CHANGELOG if needed).
+            If no docs updates are needed, do nothing.
