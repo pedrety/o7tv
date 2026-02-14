@@ -1,7 +1,6 @@
 name: Scheduled Docs Update
 on:
-  push:
-    branches: [ main ]
+  workflow_dispatch: {}
 
 jobs:
   opencode:
