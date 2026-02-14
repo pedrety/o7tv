@@ -3,8 +3,7 @@
 </div>
 
 FastAPI application that converts 7TV emote URLs to WebM files. It provides a
-minimal web UI for searching emotes, converting them, and downloading the
-converted output.
+minimal web UI for searching emotes and downloading the converted output.
 
 ## Requirements
 
@@ -42,26 +41,11 @@ uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8000
 
 Open http://localhost:8000 to use the UI.
 
-## Docker
-
-Build and run:
-
-```bash
-docker build -t o7tv .
-docker run -p 8000:8000 -v "$(pwd)/static:/app/static" o7tv
-```
-
-Or with Docker Compose:
-
-```bash
-docker compose up --build
-```
-
 ## Usage
 
 - Use the search bar to find emotes or browse trending.
-- Click Convert to generate a WebM file for an emote.
-- Download the converted WebM or static PNG when available.
+- Click Convert to download a WebM file for an emote.
+- Download the static PNG when available.
 
 ## Project structure
 
@@ -69,9 +53,8 @@ docker compose up --build
 o7tv/
 │
 ├── assets/               # Static assets like icons and images
-├── static/               # Generated WebM files
 ├── src/
-│   └── app/
+│   └── o7tv/
 │       ├── main.py       # FastAPI app factory
 │       ├── api/          # HTTP routes and endpoints
 │       ├── config/       # Configuration management

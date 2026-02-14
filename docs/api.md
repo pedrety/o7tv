@@ -1,6 +1,6 @@
 # API Documentation
 
-All endpoints are defined in `src/app/api/v1/emotes.py` and are mounted at the
+All endpoints are defined in `src/o7tv/api/emotes.py` and are mounted at the
 root path.
 
 ## GET /
@@ -16,22 +16,18 @@ Renders the main UI with trending emotes.
   results.
 - Renders `templates/home.html`.
 
-## POST /convert
+## POST /convert/download
 
-Converts a 7TV emote URL into a WebM file and renders the conversion result.
+Converts a 7TV emote URL into a WebM stream and triggers a download.
 
 **Form fields**
 - `emote_url` (string, required): Direct URL to the emote image.
+- `emote_name` (string, optional): Emote display name used for the filename.
 
 **Behavior**
-- Extracts the emote ID from the URL to derive the output filename.
-- Downloads the emote into a temporary directory.
-- Converts the file to WebM and stores it in `static/`.
-- Renders `templates/convert.html` with the generated WebM URL.
-
-**Failure cases**
-- If the download fails, renders a template error message.
-- If conversion fails, renders the error message raised by the converter.
+- Validates the emote URL host (`7tv.app`, `7tvcdn.net`).
+- Streams the WebM conversion output (no static file storage).
+- Uses `Content-Disposition` to suggest a filename based on `emote_name`.
 
 ## GET /search
 
@@ -73,15 +69,6 @@ Returns a JSON payload for infinite scrolling.
 **Failure cases**
 - Returns HTTP 502 if the upstream 7TV request fails.
 
-## GET /download/{filename}
-
-Downloads a converted WebM file from the static directory.
-
-**Path parameters**
-- `filename` (string): Name of the WebM file in `static/`.
-
-**Failure cases**
-- Returns HTTP 404 if the file does not exist.
 
 ## GET /download-image
 
