@@ -3,6 +3,13 @@ from collections.abc import Iterator
 
 import ffmpeg
 
+from o7tv.exceptions.ffmpeg_exceptions import (
+    FfmpegConversionError,
+    FfmpegInvalidInputError,
+    FfmpegStreamError,
+    FfmpegUnsupportedFormatError,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -11,15 +18,15 @@ def _raise_ffmpeg_error(stderr_msg: str) -> None:
         "Invalid data found when processing input" in stderr_msg
         or "image data not found" in stderr_msg
     ):
-        raise RuntimeError(
+        raise FfmpegInvalidInputError(
             "The downloaded file appears to be corrupted or is not a valid video/GIF format. "
             "Try another emote URL."
         )
     if "Could not find codec parameters" in stderr_msg:
-        raise RuntimeError(
+        raise FfmpegUnsupportedFormatError(
             "Unable to recognize the file format. Make sure it is a valid GIF or video."
         )
-    raise RuntimeError(f"Unable to convert the emote: {stderr_msg[:200]}")
+    raise FfmpegConversionError(f"Unable to convert the emote: {stderr_msg[:200]}")
 
 
 def stream_webm(input_source: str) -> Iterator[bytes]:
@@ -56,7 +63,7 @@ def stream_webm(input_source: str) -> Iterator[bytes]:
     )
     try:
         if process.stdout is None:
-            raise RuntimeError("Unable to stream the conversion output.")
+            raise FfmpegStreamError("Unable to stream the conversion output.")
 
         while True:
             chunk = process.stdout.read(8192)
@@ -73,7 +80,7 @@ def stream_webm(input_source: str) -> Iterator[bytes]:
         raise
     except Exception as e:
         logger.error(f"Unexpected error during streaming conversion of {input_source}: {e}")
-        raise RuntimeError("Unexpected error during conversion.") from e
+        raise FfmpegConversionError("Unexpected error during conversion.") from e
     finally:
         if process.poll() is None:
             process.kill()
