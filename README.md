@@ -55,7 +55,7 @@ o7tv/
 ├── assets/               # Static assets like icons and images
 ├── src/
 │   └── o7tv/
-│       ├── main.py       # FastAPI app factory
+│       ├── main.py       # FastAPI app
 │       ├── api/          # HTTP routes and endpoints
 │       ├── config/       # Configuration management
 │       ├── exceptions/   # Custom exception classes
