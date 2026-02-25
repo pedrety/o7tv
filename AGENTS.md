@@ -1,139 +1,74 @@
-# Agent Guidelines for o7tv
+# PROJECT KNOWLEDGE BASE
 
-## Project Overview
-Python 3.12+ FastAPI app that converts 7TV emotes to WebM. Uses `uv` for
-dependency management; templates live in `templates/` and static outputs in
-`static/`.
+## OVERVIEW
+FastAPI (Python 3.12) service that converts 7TV emotes to streamed WebM responses.
+Uses `uv` for dependency management, `ffmpeg` for conversion, and Jinja2 + Tailwind CDN
+for the minimal UI.
 
-## Environment Requirements
-- Python >= 3.12
-- FFmpeg installed on the system
-- `uv` package manager
+## STRUCTURE
+```
+o7tv/
+├── src/o7tv/              # FastAPI app package
+├── templates/             # Jinja templates (base/home/results/convert)
+├── assets/                # Icon + static assets served via /assets
+├── docs/                  # API/conversion/config/error docs
+├── static/                # Optional output mount (streaming by default)
+├── Dockerfile             # Container build/run
+├── pyproject.toml          # Tooling + deps
+└── uv.lock                # Dependency lock
+```
 
-## Build, Run, Lint, and Test Commands
+## WHERE TO LOOK
+| Task | Location | Notes |
+| --- | --- | --- |
+| App factory | `src/o7tv/main.py` | `get_app()` + module `app` |
+| Routes | `src/o7tv/api/emotes.py` | All endpoints mounted at `/` |
+| 7TV search | `src/o7tv/services/seventv.py` | GraphQL search + image selection |
+| Conversion | `src/o7tv/services/conversion.py` | `ffmpeg` streaming pipeline |
+| URL validation | `src/o7tv/utils/http.py` | Allowed hosts + safe filenames |
+| Templates | `templates/*.html` | Base template defines blocks + JS helpers |
+| Docs | `docs/*.md` | API, conversion, configuration, errors |
 
-### Install / Sync Dependencies
+## CONVENTIONS (DEVIATIONS)
+- Use `uv` (`uv sync`, `uv add/remove`); `uv.lock` is the source of truth.
+- Ruff line length is 100 and quote style is double; pre-commit runs ruff + mypy.
+- Settings are loaded via `pydantic-settings` with `APP__` env prefix.
+- Templates extend `base.html` and use `sidebar/content/scripts` blocks.
+- Allowed image hosts are `7tv.app` and `7tvcdn.net` (enforced in utils).
+- Conversion output is streamed (no on-disk storage by default).
+
+## STYLE (FOLLOW)
+- Imports: stdlib → third-party → local (`o7tv.*`), absolute imports only.
+- Formatting: 4 spaces, 100-char lines, double quotes (Ruff).
+- Types: annotate public functions; prefer PEP 604 unions (`Path | None`).
+- Docstrings: Google style for public functions/classes.
+- Errors: catch specific exceptions; use `HTTPException` for API errors; log unexpected errors.
+- Templates: keep UI strings English-only; reuse existing Tailwind classes.
+
+## ANTI-PATTERNS (THIS PROJECT)
+- Do not bypass `ensure_allowed_image_url` or accept non-7tv hosts.
+- Do not write converted files to disk unless docs are updated accordingly.
+- Do not edit `uv.lock` by hand; use `uv add/remove` and `uv lock`.
+
+## UNIQUE STYLES
+- Base template provides `window.o7tv*` helpers and handles convert submits globally.
+- UI uses Tailwind CDN + gradient buttons; reuse existing utility classes for parity.
+- Infinite scroll expects `#search-grid`, `#static-grid`, and `#scroll-status` IDs with
+  `data-page` and `data-query` attributes.
+
+## COMMANDS
 ```bash
 uv sync
-```
-
-### Run the App
-```bash
-# Dev server (reload)
-uvicorn app.main:app --app-dir src --reload --host 0.0.0.0 --port 8000
-
-# Production server
-uvicorn app.main:app --app-dir src --host 0.0.0.0 --port 8000
-
-# Run via python module
-python -m uvicorn app.main:app --app-dir src --reload
-```
-
-### Docker
-```bash
+uvicorn o7tv.main:app --app-dir src --reload --host 0.0.0.0 --port 8000
+python -m pytest tests/ -v
+pre-commit run --all-files
 docker build -t o7tv .
 docker run -p 8000:8000 -v "$(pwd)/static:/app/static" o7tv
-docker compose up --build
 ```
 
-### Tests
-**Note:** No `tests/` directory exists in this repo. If tests are added, use
-pytest:
-```bash
-# Run all tests
-python -m pytest tests/ -v
-
-# Run a single test by name or pattern
-python -m pytest tests/ -k "test_name" -v
-
-# Run a single test file
-python -m pytest tests/test_emotes.py -v
-```
-
-### Lint / Format / Type Check
-Pre-commit is the source of truth.
-```bash
-# Install hooks (once)
-pre-commit install
-
-# Run all hooks
-pre-commit run --all-files
-
-# Individual tools (if installed)
-python -m ruff check src/
-python -m ruff format src/
-mypy src/
-```
-
-### Tooling Notes
-- No CI workflows are present in `.github/workflows/`.
-- Use `uv sync` for dependency installs (`uv.lock` is committed).
-
-## Pre-commit Hooks (Configured)
-Defined in `.pre-commit-config.yaml`:
-- `pyupgrade`
-- `mypy`
-- `ruff` (with `--fix`)
-- `ruff-format`
-- Standard pre-commit hooks (trailing whitespace, TOML/YAML checks, etc.)
-
-## Code Style Guidelines
-
-### Imports
-- Group imports: stdlib → third-party → local (`o7tv.*`).
-- Use absolute imports (e.g., `from o7tv.api.v1.emotes import router`).
-- One import per line; alphabetize within groups.
-
-### Formatting
-- 4-space indentation.
-- Prefer double quotes for strings.
-- Line length: 100 (Ruff configured).
-
-### Types
-- Annotate all function signatures.
-- Use PEP 604 unions (`Path | None`) over `Optional[Path]`.
-
-### Naming
-- Functions/variables: `snake_case`.
-- Classes: `PascalCase`.
-- Constants: `UPPER_SNAKE_CASE`.
-- Private helpers: prefix `_`.
-
-### Docstrings
-- Use Google-style docstrings with Args/Returns/Raises.
-- Document public functions and classes.
-
-### Error Handling
-- Catch specific exceptions (avoid bare `except:`).
-- Use `HTTPException` for API error responses.
-- Log unexpected errors (see `services/conversion.py`).
-
-### Jinja/Frontend
-- Templates are Jinja2 in `templates/` with inline CSS in `templates/base.html`.
-- Keep UI strings consistent and English-only.
-
-## Architecture & Structure
-- `src/o7tv/main.py` → FastAPI app factory
-- `src/o7tv/api/v1/` → API routes
-- `src/o7tv/services/` → business logic
-- `src/o7tv/utils/` → helpers (HTTP, file utilities)
-- `src/o7tv/models/` → Pydantic models
-- `templates/` → Jinja2 templates
-- `static/` → generated WebM outputs
-
-## Dependency Management
-- Source of truth: `pyproject.toml` + `uv.lock`.
-- Use `uv add/remove` for dependencies; `uv lock` to update.
-
-## Configuration & Debugging
-- VSCode launch: `.vscode/launch.json` (uvicorn, reload, `--app-dir src`).
-- Config lives in `src/o7tv/config/config.py` using `pydantic-settings`.
-
-## Cursor / Copilot Rules
-- No `.cursorrules` or `.cursor/rules` present.
-- No `.github/copilot-instructions.md` present.
-
-## Common Tasks
-- Add new endpoint: create route in `src/o7tv/api/v1/emotes.py`.
-- Add utility: `src/o7tv/utils/*.py` with type hints + docstring.
-- Update templates: `templates/*.html` and pass data via `TemplateResponse`.
+## NOTES
+- `.vscode/launch.json` already uses `o7tv.main:app`; README/Dockerfile still mention
+  `app.main:app` (update pending).
+- No `tests/` directory exists yet; pytest commands are for future tests.
+- `static/` is optional today because responses are streamed, but the Docker run
+  command mounts it for future persistence.
