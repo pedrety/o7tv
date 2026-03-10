@@ -127,3 +127,8 @@ warn_no_return = true
 [[tool.mypy.overrides]]
 module = ["ffmpeg"]
 ignore_missing_imports = true
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

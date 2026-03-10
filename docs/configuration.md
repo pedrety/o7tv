@@ -10,6 +10,7 @@ present.
 | --- | --- | --- |
 | `APP__TEMPLATES_DIR` | Path to the Jinja2 templates directory. | `PROJECT_ROOT / templates` |
 | `APP__SEVENTV_GQL_URL` | 7TV GraphQL API endpoint. | `https://api.7tv.app/v4/gql` |
+| `APP__MAX_WEBM_SIZE_BYTES` | Maximum allowed size for converted WebM output in bytes. | `253952` |
 
 ## Defaults
 

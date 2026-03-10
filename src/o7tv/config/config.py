@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     templates_dir: Path = PROJECT_ROOT / "templates"
     seventv_gql_url: str = "https://api.7tv.app/v4/gql"
+    max_webm_size_bytes: int = 248 * 1024
 
 
 settings = Settings()

@@ -1,6 +1,6 @@
 # Conversion Pipeline
 
-The conversion pipeline streams a 7TV emote asset into a WebM response using
+The conversion pipeline converts a 7TV emote asset into a WebM response using
 `ffmpeg`. The process is implemented in
 `src/o7tv/services/conversion.py` and shared URL helpers in
 `src/o7tv/utils/http.py`.
@@ -21,10 +21,14 @@ The conversion pipeline streams a 7TV emote asset into a WebM response using
    - CRF: `32`
    - `auto-alt-ref` disabled
    - Output is trimmed to 3 seconds.
+   - When `APP__MAX_WEBM_SIZE_BYTES` is configured, ffmpeg applies a target bitrate
+     and a hard output cap (`-fs`) so generated WebM output stays within that limit.
 
 ## Output
 
-- Converted files are streamed directly in the response (no static storage).
+- Converted files are returned directly in the HTTP response without static storage.
+- When a size limit is configured, the service buffers the generated WebM in memory
+  so it can verify the final payload size before sending it.
 
 ## Error handling
 

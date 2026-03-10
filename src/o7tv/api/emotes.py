@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
 from o7tv.config.config import settings
-from o7tv.services.conversion import stream_webm
+from o7tv.services.conversion import render_webm_bytes
 from o7tv.services.seventv import search_emotes
 from o7tv.utils.http import (
     content_disposition,
@@ -20,12 +20,17 @@ router = APIRouter()
 templates = Jinja2Templates(directory=str(settings.templates_dir))
 
 
-def _stream_response(emote_url: str, disposition: str) -> StreamingResponse:
+def _stream_response(emote_url: str, disposition: str) -> Response:
     emote_url = ensure_allowed_image_url(emote_url)
-    return StreamingResponse(
-        stream_webm(emote_url),
+    payload = render_webm_bytes(emote_url, max_output_bytes=settings.max_webm_size_bytes)
+
+    return Response(
+        content=payload,
         media_type="video/webm",
-        headers={"Content-Disposition": disposition},
+        headers={
+            "Content-Disposition": disposition,
+            "Content-Length": str(len(payload)),
+        },
     )
 
 
@@ -76,7 +81,7 @@ async def convert_download(
     emote_url_form: str | None = Form(None, alias="emote_url"),
     emote_name: str | None = None,
     emote_name_form: str | None = Form(None, alias="emote_name"),
-) -> StreamingResponse:
+) -> Response:
     """Handle the form submission to convert an emote URL to a webm file.
 
     Args:
@@ -86,7 +91,7 @@ async def convert_download(
         emote_name_form (str | None): The emote name from form data.
 
     Returns:
-        StreamingResponse: The streaming response with the converted webm file.
+        Response: The response containing the converted webm file.
     """
     resolved = resolve_emote_url(emote_url, emote_url_form)
     original = emote_name or emote_name_form

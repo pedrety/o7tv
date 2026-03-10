@@ -16,17 +16,20 @@ Renders the main UI with trending emotes.
   results.
 - Renders `templates/home.html`.
 
-## POST /convert/download
+## GET/POST /convert/download
 
-Converts a 7TV emote URL into a WebM stream and triggers a download.
+Converts a 7TV emote URL into a WebM download response.
 
-**Form fields**
+**Parameters**
 - `emote_url` (string, required): Direct URL to the emote image.
 - `emote_name` (string, optional): Emote display name used for the filename.
 
+The endpoint accepts these values via query parameters or form fields.
+
 **Behavior**
 - Validates the emote URL host (`7tv.app`, `7tvcdn.net`).
-- Streams the WebM conversion output (no static file storage).
+- Converts the emote to WebM without writing files to disk.
+- Applies `APP__MAX_WEBM_SIZE_BYTES` when configured and returns `Content-Length`.
 - Uses `Content-Disposition` to suggest a filename based on `emote_name`.
 
 ## GET /search

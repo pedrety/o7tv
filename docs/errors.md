@@ -17,4 +17,5 @@ This document summarizes user-facing error behavior as implemented in
 Conversion failures are surfaced in the UI with descriptive messages, including
 cases where the input file is corrupted, the media format is unrecognized, or
 ffmpeg returns a general error. Unexpected exceptions are logged and displayed
-as a generic conversion failure.
+as a generic conversion failure. If the configured WebM size cap cannot be met
+after quality reduction, conversion fails with a descriptive error.
